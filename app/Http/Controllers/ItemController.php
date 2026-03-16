@@ -5,10 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use Illuminate\Http\Request;
 
+use function Termwind\render;
+
 class ItemController extends Controller
 {
     public function scanPage(){
+        return inertia('AdminDashboard/Scanner');
+    }
+
+    public function adminPage(){
         return inertia('AdminDashboard/Index');
+    }
+
+    public function itemPage(){
+        $items = Item::all();
+        return inertia('AdminDashboard/Items', ['items' => $items]);
     }
 
     public function scan(Request $request)
