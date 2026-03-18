@@ -16,10 +16,9 @@ export default function({items}){
                         
                         {items.filter(item => item.quantity <= 10).map(item => (
                             <div key={item.id}>
-                        <td  className="border w-1/3 border-black">
-                              {item.product_name} - {item.quantity}
-                            
-                            </td>      
+                        {item.status === "active" && (<td  className="border w-1/3 border-black">
+                              {item.product_name} - {item.quantity}   
+                            </td>)}      
                             </div>
                 ))}
                         
@@ -28,9 +27,11 @@ export default function({items}){
                         <p className="text-center">high</p>
                         {items.filter(item => item.quantity > 10).map(item => (
                             <div key={item.id}>
-                            <td className="border border-black w-1/3"> 
+                            {item.status === "active" && (
+                                <td className="border border-black w-1/3"> 
                                 {item.product_name} - {item.quantity}
                             </td>
+                            )}
                             </div>
                 ))}     
                     </tr>

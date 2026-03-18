@@ -15,6 +15,7 @@ Route:: controller(ItemController::class)->group(function(){
     Route::get('/search/{barcode?}', 'searchPage')->name('search_page');
     Route::post('/scan-product', 'scan');
     Route::post('/create-product', 'create_item')->name('create_item');
+    Route::get('/inactive-items', 'inactive_items_page')->name('inactive_items_page');
     Route::post('/update-status/{barcode}', 'update_status')->name('update_status');
 });
 

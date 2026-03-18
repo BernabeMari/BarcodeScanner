@@ -81,4 +81,9 @@ class ItemController extends Controller
         return back()->with('success', 'Product status updated to inactive');
 
     }
+
+    public function inactive_items_page(){
+        $items = Item::where('status', 'inactive')->get();
+        return inertia('AdminDashboard/InactiveItems', ['items' => $items]);
+    }
 }
