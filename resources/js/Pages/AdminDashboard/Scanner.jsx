@@ -10,6 +10,8 @@ export default function Index() {
     barcode: '',
     product_name: '',
     quantity: '',
+    department: '',
+    status: 'active',
   })
 
   function submit_item(e){
@@ -30,7 +32,7 @@ export default function Index() {
 
     <Layout>
       <SidebarLayout>
-        <div className="p-4 space-y-4 bg-slate-100 min-h-screen">
+        <div className="min-h-screen">
 
       {/* Camera   scanner */}
       <div>
@@ -45,6 +47,11 @@ export default function Index() {
               <input type="text" value={itemData.barcode} onChange={(e)=>setItemData('barcode', e.target.value)} readOnly className="border p-2 w-full cursor-not-allowed" autoFocus/>
               <input type="text" value={itemData.product_name} onChange={(e)=>setItemData('product_name', e.target.value)} placeholder="Enter Name" />
               <input type="number" value={itemData.quantity} onChange={(e)=>setItemData('quantity', e.target.value)} placeholder="Quantity" />
+              <input type="text" value={itemData.department} onChange={(e)=>setItemData('department', e.target.value)} placeholder="Department" />
+              <select readOnly value={itemData.status} onChange={(e)=>setItemData('status', e.target.value)} className="border p-2">
+                <option value="active">Active</option>
+              </select>
+
               <button type="submit">Create</button>
           </form>
           </div>

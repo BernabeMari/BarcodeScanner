@@ -10,5 +10,7 @@ class Item extends Model
         'barcode',
         'product_name',
         'quantity',
+        'department',
+        'status',
     ];
 }

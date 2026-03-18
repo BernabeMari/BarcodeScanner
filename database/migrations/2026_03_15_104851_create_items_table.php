@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('barcode')->unique();
             $table->string('product_name');
             $table->integer('quantity');
+            $table->string('department');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
         });
     }

@@ -7,6 +7,7 @@ export default function SidebarLayout({ children }) {
         <Link className="bg-red-400 p-2 inline-block rounded-2xl m-2 hover:bg-red-800" href={route('scanner_page')}>Barcode Scanner</Link>
         <Link className="bg-red-400 p-2 inline-block rounded-2xl m-2 hover:bg-red-800" href={route('search_page')}>Barcode Search</Link>
         <Link className="bg-red-400 p-2 inline-block rounded-2xl m-2 hover:bg-red-800" href={route('items_page')}>Items</Link>
+        <Link className="bg-red-400 p-2 inline-block rounded-2xl m-2 hover:bg-red-800" href={route('create_user_page')}>Create User</Link>
       </aside>
 
       {/* Main content */}

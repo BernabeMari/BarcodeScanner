@@ -14,6 +14,10 @@ class ItemController extends Controller
         return inertia('AdminDashboard/Scanner');
     }
 
+    public function createUserPage(){
+        return inertia('AdminDashboard/CreateUser');
+    }
+
     public function adminPage(){
         return inertia('AdminDashboard/Index');
     }
@@ -56,6 +60,8 @@ class ItemController extends Controller
             'barcode' => 'required',
             'product_name' => 'required',
             'quantity' => 'required',
+            'department' => 'required',
+            'status' => 'required',
         ]);
 
         Item::create($items);
