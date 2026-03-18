@@ -67,4 +67,18 @@ class ItemController extends Controller
         Item::create($items);
         return redirect()->route('admin_page');
     }
+
+    public function update_status($barcode){
+        $item = Item::where('barcode', $barcode)->first();
+
+        if(!$item){
+            return back()->with('error', 'Product not found');
+        }
+
+        $item->status = 'inactive';
+        $item->save();
+
+        return back()->with('success', 'Product status updated to inactive');
+
+    }
 }

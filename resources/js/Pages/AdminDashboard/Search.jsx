@@ -4,16 +4,20 @@ import BarcodeScanner from "@/Components/BarcodeScanner";
 import { router, useForm } from "@inertiajs/react";
 
 export default function Search({ item, error }) {
-    const {setData} = useForm({
+    const { setData: setStatus } = useForm({
         status: '',
     })
 
-    function handleScan(scannedBarcode) {
-        router.get(route('search_page', { barcode: scannedBarcode }));
+    function updateStatus(e){
+        e.preventDefault()
+        setStatus('inactive')
+        router.post(route('update_status', { barcode: item.barcode }), {
+            onSuccess: () => router.visit(route('search_page'))
+        })
     }
 
-    function get(){
-        setData('status', 'inactive' )
+    function handleScan(scannedBarcode) {
+        router.get(route('search_page', { barcode: scannedBarcode }));
     }
 
     return (
@@ -36,7 +40,9 @@ export default function Search({ item, error }) {
                                 
                                 {item.status === 'active' && (
                                     <div>
-                                        <button type="button">Get</button>
+                                        <button type="button" onClick={updateStatus}>
+                                            Get
+                                        </button>
                                     </div>
                                 )}
 
