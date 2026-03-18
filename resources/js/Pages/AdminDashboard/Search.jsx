@@ -1,6 +1,5 @@
 import Layout from "@/Layouts/Layout"
 import SidebarLayout from "@/Layouts/sidebarLayout"
-import BarcodeScanner from "@/Components/BarcodeScanner";
 import { router, useForm } from "@inertiajs/react";
 
 export default function Search({ item, error }) {
@@ -25,7 +24,13 @@ export default function Search({ item, error }) {
             <SidebarLayout>
                 <div>
                     <div>
-                        <BarcodeScanner onScan={handleScan} />
+                 <input type="text" placeholder="Scan barcode" autoFocus onKeyDown={(e) => {
+      if (e.key === "Enter") {
+      handleScan(e.target.value);
+      e.target.value = ""; 
+    }
+  }}
+/>
 
                         {error ? (
                             <div className="mt-4 text-red-600">{error}</div>

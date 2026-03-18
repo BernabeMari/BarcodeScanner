@@ -1,4 +1,3 @@
-import BarcodeScanner from "@/Components/BarcodeScanner";
 import { router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import SidebarLayout from "@/Layouts/sidebarLayout"
@@ -34,10 +33,13 @@ export default function Index() {
       <SidebarLayout>
         <div className="min-h-screen">
 
-      {/* Camera   scanner */}
-      <div>
-      <BarcodeScanner onScan={handleScan} />
-      </div>
+      <input type="text" placeholder="Scan barcode" autoFocus onKeyDown={(e) => {
+      if (e.key === "Enter") {
+      handleScan(e.target.value);
+      e.target.value = ""; 
+    }
+  }}
+/>
 
       {/* Text field shows scanned barcode */}
       <div>
