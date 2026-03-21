@@ -7,13 +7,6 @@ export default function Search({ item, error }) {
         status: '',
     })
 
-    function updateStatus(e){
-        e.preventDefault()
-        setStatus('inactive')
-        router.post(route('update_status', { barcode: item.barcode }), {
-            onSuccess: () => router.visit(route('search_page'))
-        })
-    }
 
     function handleScan(scannedBarcode) {
         router.get(route('search_page', { barcode: scannedBarcode }));
@@ -42,15 +35,6 @@ export default function Search({ item, error }) {
                                 <div>Quantity: {item.quantity}</div>
                                 <div>Department: {item.department}</div>
                                 <div>Status: {item.status}</div>
-                                
-                                {item.status === 'active' && (
-                                    <div>
-                                        <button type="button" onClick={updateStatus}>
-                                            Get
-                                        </button>
-                                    </div>
-                                )}
-
                             </div>
                         ) : (
                             <div className="mt-4 text-gray-500">Scan a barcode to see the result.</div>

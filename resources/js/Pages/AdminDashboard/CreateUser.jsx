@@ -8,10 +8,14 @@ export default function(){
         username: '',
         password: '',
         role: '',
+        department: '',
 })
 
     function createUser(e){
-        post(route('create_user'))
+        e.preventDefault()
+        post(route('create_user'), {
+            onSuccess: ()=>resetForm()
+        })
     }
     return(
         <div>
@@ -25,6 +29,9 @@ export default function(){
                         <option value="admin">Admin</option>
                         <option value="employee">Employee</option>
                         </select>
+                        {createData.role === 'employee' && (
+                            <input type="text" value={createData.department} onChange={(e) => setCreateData('department', e.target.value)} placeholder="Enter Department"/>
+                        )}
                         <button type="submit" className="m-4 rounded-full bg-red-400 hover:bg-red-800 cursor-pointer">Create</button>
                     </form>
                 </SidebarLayout>
