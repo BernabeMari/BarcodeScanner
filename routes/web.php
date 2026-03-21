@@ -26,6 +26,8 @@ Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->gr
     Route::get('/requests/audit-logs', 'auditLogsPage')->name('requests_audit_logs_page');
     Route::post('/requests/{id}/verify-item', 'verifyRequestItem')->name('verify_request_item');
     Route::post('/update-request/{id}', 'updateRequest')->name('update_request');
+    Route::post('/requests/{id}/mark-issued', 'markRequestIssued')->name('mark_request_issued');
+    Route::post('/requests/{id}/cancel-issuance', 'cancelRequestIssuance')->name('cancel_request_issuance');
 });
 
 Route::middleware(['auth', 'role:employee'])->controller(ItemController::class)->group(function(){
@@ -33,6 +35,8 @@ Route::middleware(['auth', 'role:employee'])->controller(ItemController::class)-
     Route::get('/employee/my-requests', 'employeeMyRequestsPage')->name('employee_my_requests');
     Route::post('/requests/{id}/cancel', 'cancelRequest')->name('cancel_request');
     Route::post('/submit-request', 'submitRequest')->name('submit_request');
+    Route::get('/requests/{id}/receipt-preview', 'receiptPreview')->name('receipt_preview');
+    Route::get('/requests/{id}/receipt', 'generateReceipt')->name('generate_receipt');
 });
 
 Route::controller(UserController::class)->group(function(){

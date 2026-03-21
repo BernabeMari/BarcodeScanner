@@ -1,12 +1,38 @@
 import Layout from "@/Layouts/Layout"
 import SidebarLayout from "@/Layouts/sidebarLayout"
-import { router } from "@inertiajs/react"
+import { router, usePage } from "@inertiajs/react"
+import { useState, useEffect } from "react"
 
-export default function DoneRequests({ requests, filter }) {
+export default function DoneRequests({ requests, filter, search }) {
+    const { url } = usePage()
+    const [searchTerm, setSearchTerm] = useState(search || "")
+
+    useEffect(() => {
+        setSearchTerm(search || "")
+    }, [search])
+
     function setFilter(next) {
         router.get(
             route("requests_done_page"),
-            { status: next },
+            { status: next, search: searchTerm },
+            { preserveScroll: true, preserveState: true },
+        )
+    }
+
+    function handleSearch(e) {
+        e.preventDefault()
+        router.get(
+            route("requests_done_page"),
+            { status: filter, search: searchTerm },
+            { preserveScroll: true, preserveState: true },
+        )
+    }
+
+    function clearSearch() {
+        setSearchTerm("")
+        router.get(
+            route("requests_done_page"),
+            { status: filter, search: "" },
             { preserveScroll: true, preserveState: true },
         )
     }
@@ -42,6 +68,28 @@ export default function DoneRequests({ requests, filter }) {
                             </button>
                             <button
                                 type="button"
+                                onClick={() => setFilter("issued")}
+                                className={
+                                    filter === "issued"
+                                        ? "bg-blue-700 text-white px-4 py-2 rounded-lg"
+                                        : "bg-blue-100 text-blue-900 px-4 py-2 rounded-lg hover:bg-blue-200"
+                                }
+                            >
+                                Issued
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFilter("issuance_cancelled")}
+                                className={
+                                    filter === "issuance_cancelled"
+                                        ? "bg-orange-700 text-white px-4 py-2 rounded-lg"
+                                        : "bg-orange-100 text-orange-900 px-4 py-2 rounded-lg hover:bg-orange-200"
+                                }
+                            >
+                                Issuance Cancelled
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => setFilter("rejected")}
                                 className={
                                     filter === "rejected"
@@ -54,6 +102,36 @@ export default function DoneRequests({ requests, filter }) {
                         </div>
                     </div>
 
+                    {/* Search Bar */}
+                    <div className="mb-6">
+                        <form onSubmit={handleSearch} className="flex gap-2">
+                            <div className="flex-1 max-w-md">
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Search by Request ID..."
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                Search
+                            </button>
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={clearSearch}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                                >
+                                    Clear
+                                </button>
+                            )}
+                        </form>
+                    </div>
+
                     {requests.length === 0 ? (
                         <p className="text-gray-500">No done requests yet.</p>
                     ) : (
@@ -63,9 +141,14 @@ export default function DoneRequests({ requests, filter }) {
                                     key={req.id}
                                     className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
                                 >
-                                    <p className="font-medium text-gray-900">
-                                        {req.user?.username ?? "Unknown user"}
-                                    </p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="font-medium text-gray-900">
+                                            {req.user?.username ?? "Unknown user"}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            Request ID: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{req.id}</code>
+                                        </p>
+                                    </div>
                                     <p className="text-sm text-gray-600 mt-1">
                                         <span className="font-medium">Department:</span>{" "}
                                         {req.user?.department?.trim()
@@ -83,11 +166,18 @@ export default function DoneRequests({ requests, filter }) {
                                             className={
                                                 req.status === "approved"
                                                     ? "text-green-700"
+                                                    : req.status === "issued"
+                                                    ? "text-blue-700"
+                                                    : req.status === "issuance_cancelled"
+                                                    ? "text-orange-700"
                                                     : "text-red-700"
                                             }
                                         >
-                                            {req.status}
+                                            {req.status === "issuance_cancelled" ? "Issuance Cancelled" : req.status}
                                         </span>
+                                    </p>
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        Requested on {new Date(req.created_at).toLocaleString()}
                                     </p>
 
                                     {req.approved_at && (
@@ -100,6 +190,19 @@ export default function DoneRequests({ requests, filter }) {
                                         <p className="mt-1 text-xs text-red-700">
                                             Rejected at{" "}
                                             {new Date(req.rejected_at).toLocaleString()}
+                                        </p>
+                                    )}
+
+                                    {req.issued_at && (
+                                        <p className="mt-1 text-xs text-blue-700">
+                                            Issued at{" "}
+                                            {new Date(req.issued_at).toLocaleString()}
+                                        </p>
+                                    )}
+                                    {req.issuance_cancelled_at && (
+                                        <p className="mt-1 text-xs text-orange-700">
+                                            Issuance cancelled at{" "}
+                                            {new Date(req.issuance_cancelled_at).toLocaleString()}
                                         </p>
                                     )}
 
@@ -116,6 +219,29 @@ export default function DoneRequests({ requests, filter }) {
                                                     </li>
                                                 ))}
                                             </ul>
+                                        </div>
+                                    )}
+
+                                    {req.status === "approved" && (
+                                        <div className="mt-4 flex gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    router.post(route("mark_request_issued", req.id))
+                                                }
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                                            >
+                                                Mark as Issued
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    router.post(route("cancel_request_issuance", req.id))
+                                                }
+                                                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm"
+                                            >
+                                                Cancel Issuance
+                                            </button>
                                         </div>
                                     )}
                                 </li>

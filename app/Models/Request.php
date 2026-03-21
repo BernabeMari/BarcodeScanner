@@ -16,6 +16,8 @@ class Request extends Model
         'approved_at',
         'rejected_at',
         'cancelled_at',
+        'issued_at',
+        'issuance_cancelled_at',
     ];
 
     protected $casts = [
@@ -23,6 +25,8 @@ class Request extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'issued_at' => 'datetime',
+        'issuance_cancelled_at' => 'datetime',
     ];
 
     protected $appends = ['verified_items'];

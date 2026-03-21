@@ -6,9 +6,14 @@ import { useState } from "react"
 export default function Requests({ requests }) {
     const { errors, flash } = usePage().props
     const [barcodes, setBarcodes] = useState({})
+    const [messages, setMessages] = useState({})
 
     function setBarcodeFor(id, value) {
         setBarcodes((prev) => ({ ...prev, [id]: value }))
+    }
+
+    function setMessageFor(id, value) {
+        setMessages((prev) => ({ ...prev, [id]: value }))
     }
 
     function verifyItem(requestId) {
@@ -27,7 +32,8 @@ export default function Requests({ requests }) {
     }
 
     function updateRequest(id, status) {
-        router.post(route("update_request", id), { status }, { preserveScroll: true })
+        const message = (messages[id] ?? "").trim()
+        router.post(route("update_request", id), { status, message }, { preserveScroll: true })
     }
 
     return (
@@ -84,6 +90,9 @@ export default function Requests({ requests }) {
                                         >
                                             {req.status}
                                         </span>
+                                    </p>
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        Requested on {new Date(req.created_at).toLocaleString()}
                                     </p>
                                     {(req.verified_items?.length ?? 0) > 0 && (
                                         <div className="mt-2 text-sm text-gray-700 bg-gray-50 rounded p-2">
@@ -147,6 +156,18 @@ export default function Requests({ requests }) {
                                                 >
                                                     Reject
                                                 </button>
+                                            </div>
+                                            <div className="mt-3">
+                                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                    Optional message to requester
+                                                </label>
+                                                <textarea
+                                                    className="w-full border rounded px-3 py-2 text-sm resize-none"
+                                                    rows="2"
+                                                    placeholder="Add a message explaining the decision (optional)..."
+                                                    value={messages[req.id] ?? ""}
+                                                    onChange={(e) => setMessageFor(req.id, e.target.value)}
+                                                />
                                             </div>
                                             {!(req.item_barcodes?.length > 0) && (
                                                 <p className="text-xs text-gray-500">

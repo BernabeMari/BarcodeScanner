@@ -3,8 +3,10 @@ import { router, usePage } from "@inertiajs/react"
 
 function statusClass(status) {
     if (status === "approved") return "text-green-700"
+    if (status === "issued") return "text-blue-700"
     if (status === "rejected") return "text-red-700"
     if (status === "cancelled") return "text-slate-500"
+    if (status === "issuance_cancelled") return "text-orange-700"
     return "text-yellow-600"
 }
 
@@ -73,6 +75,23 @@ export default function MyRequests({ requests }) {
                                         Cancelled at {new Date(req.cancelled_at).toLocaleString()}
                                     </p>
                                 )}
+                                {req.issued_at && (
+                                    <p className="mt-1 text-xs text-blue-700">
+                                        Issued at {new Date(req.issued_at).toLocaleString()}
+                                    </p>
+                                )}
+                                {req.issuance_cancelled_at && (
+                                    <p className="mt-1 text-xs text-orange-700">
+                                        Issuance cancelled at {new Date(req.issuance_cancelled_at).toLocaleString()}
+                                    </p>
+                                )}
+
+                                {req.admin_message && (
+                                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p className="text-sm font-medium text-blue-900">Message from Admin:</p>
+                                        <p className="text-sm text-blue-800 mt-1">{req.admin_message}</p>
+                                    </div>
+                                )}
 
                                 {req.status === "pending" && (
                                     <button
@@ -83,6 +102,16 @@ export default function MyRequests({ requests }) {
                                         className="mt-4 bg-slate-700 hover:bg-slate-900 text-white px-4 py-2 rounded-lg"
                                     >
                                         Cancel request
+                                    </button>
+                                )}
+
+                                {req.status === "approved" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => router.visit(route("receipt_preview", req.id))}
+                                        className="mt-4 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg mr-2"
+                                    >
+                                        View Receipt
                                     </button>
                                 )}
                             </li>

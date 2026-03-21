@@ -165,6 +165,7 @@ class ItemController extends Controller
     public function updateRequest($id, Request $request){
         $request->validate([
             'status' => 'required|in:approved,rejected',
+            'message' => 'nullable|string|max:1000',
         ]);
 
         $req = ItemRequest::findOrFail($id);
@@ -209,17 +210,95 @@ class ItemController extends Controller
             'to_status' => $toStatus,
             'metadata' => [
                 'verified_barcodes' => $req->item_barcodes ?? [],
+                'admin_message' => $request->message,
             ],
         ]);
 
+        // Send notification to the requester if a message is provided
+        if ($request->filled('message')) {
+            $req->user->notify(new \App\Notifications\AdminMessageNotification($req, $request->message, $toStatus));
+        }
+
         return back()->with('success', 'Request updated');
+    }
+
+    public function markRequestIssued($id, Request $request){
+        $req = ItemRequest::findOrFail($id);
+
+        if ($req->status !== 'approved') {
+            return back()->withErrors(['status' => 'Only approved requests can be marked as issued.']);
+        }
+
+        $fromStatus = $req->status;
+        $req->status = 'issued';
+        $req->issued_at = now();
+        $req->save();
+
+        RequestAudit::create([
+            'request_id' => $req->id,
+            'actor_user_id' => $request->user()->id,
+            'action' => 'marked_issued',
+            'from_status' => $fromStatus,
+            'to_status' => 'issued',
+            'metadata' => [
+                'verified_barcodes' => $req->item_barcodes ?? [],
+            ],
+        ]);
+
+        return back()->with('success', 'Request marked as issued.');
+    }
+
+    public function cancelRequestIssuance($id, Request $request){
+        $req = ItemRequest::findOrFail($id);
+
+        if ($req->status !== 'approved') {
+            return back()->withErrors(['status' => 'Only approved requests can have their issuance cancelled.']);
+        }
+
+        // Set items back to active
+        $barcodes = $req->item_barcodes ?? [];
+        if (count($barcodes) > 0) {
+            Item::whereIn('barcode', $barcodes)->update(['status' => 'active']);
+        }
+
+        $fromStatus = $req->status;
+        $req->status = 'issuance_cancelled';
+        $req->issuance_cancelled_at = now();
+        $req->save();
+
+        RequestAudit::create([
+            'request_id' => $req->id,
+            'actor_user_id' => $request->user()->id,
+            'action' => 'issuance_cancelled',
+            'from_status' => $fromStatus,
+            'to_status' => 'issuance_cancelled',
+            'metadata' => [
+                'verified_barcodes' => $barcodes,
+                'items_reactivated' => count($barcodes),
+            ],
+        ]);
+
+        return back()->with('success', 'Issuance cancelled and items reactivated.');
     }
 
     public function employeeMyRequestsPage(Request $request){
         $requests = ItemRequest::query()
             ->where('user_id', $request->user()->id)
+            ->with(['user'])
             ->orderByDesc('created_at')
             ->get();
+
+        // Load admin messages for each request
+        foreach ($requests as $req) {
+            $adminMessage = $request->user()
+                ->notifications()
+                ->where('type', \App\Notifications\AdminMessageNotification::class)
+                ->whereJsonContains('data->request_id', $req->id)
+                ->latest()
+                ->first();
+
+            $req->admin_message = $adminMessage ? $adminMessage->data['admin_message'] : null;
+        }
 
         return inertia('Employee/MyRequests', ['requests' => $requests]);
     }
@@ -253,14 +332,58 @@ class ItemController extends Controller
         return back()->with('success', 'Request cancelled.');
     }
 
+    public function receiptPreview($id, Request $request){
+        $req = ItemRequest::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->where('status', 'approved')
+            ->with('user')
+            ->firstOrFail();
+
+        $verifiedItems = $req->verified_items;
+
+        return inertia('Employee/ReceiptPreview', [
+            'request' => $req,
+            'items' => $verifiedItems,
+            'user' => $request->user(),
+        ]);
+    }
+
+    public function generateReceipt($id, Request $request){
+        $req = ItemRequest::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->where('status', 'approved')
+            ->with('user')
+            ->firstOrFail();
+
+        $verifiedItems = $req->verified_items;
+
+        // Generate a simple HTML receipt
+        $html = view('receipt', [
+            'request' => $req,
+            'items' => $verifiedItems,
+            'user' => $request->user(),
+        ])->render();
+
+        return response($html, 200)
+            ->header('Content-Type', 'text/html')
+            ->header('Content-Disposition', 'attachment; filename="receipt_' . $req->id . '.html"');
+    }
+
     public function requestsDonePage(Request $request){
         $filter = $request->query('status', 'all');
+        $search = $request->query('search', '');
 
         $query = ItemRequest::with('user')
-            ->whereIn('status', ['approved', 'rejected']);
+            ->whereIn('status', ['approved', 'rejected', 'issued', 'issuance_cancelled']);
 
-        if ($filter === 'approved' || $filter === 'rejected') {
+        if (in_array($filter, ['approved', 'rejected', 'issued', 'issuance_cancelled'])) {
             $query->where('status', $filter);
+        }
+
+        if (!empty($search)) {
+            $query->where('id', $search);
         }
 
         $requests = $query
@@ -270,6 +393,7 @@ class ItemController extends Controller
         return inertia('AdminDashboard/DoneRequests', [
             'requests' => $requests,
             'filter' => $filter,
+            'search' => $search,
         ]);
     }
 
