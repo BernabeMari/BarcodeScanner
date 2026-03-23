@@ -26,7 +26,7 @@ export default function({items}){
             </div>
 
             <div>
-                {showAllItem && items.map(item =>(
+                {showAllItem && items.filter(item => item.status === "active").map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <p className="text-sm text-gray-600"><span className="font-medium">Product Name:</span> {item.product_name}</p>
                         <p className="text-sm text-gray-600"><span className="font-medium">Barcode:</span> {item.barcode}</p>
@@ -34,7 +34,7 @@ export default function({items}){
                     </div>
                 ))}
 
-                {showLowItem && items.filter(item => item.quantity <= 30).map(item =>(
+                {showLowItem && items.filter(item => item.quantity <= 30 && item.status === "active").map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <p className="text-sm text-gray-600"><span className="font-medium">Product Name:</span> {item.product_name}</p>
                         <p className="text-sm text-gray-600"><span className="font-medium">Barcode:</span> {item.barcode}</p>
@@ -42,7 +42,7 @@ export default function({items}){
                     </div>
                 ))}
 
-                {showHighItem && items.filter(item => item.quantity >= 30).map(item =>(
+                {showHighItem && items.filter(item => item.quantity >= 30 && item.status === "active").map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <p className="text-sm text-gray-600"><span className="font-medium">Product Name:</span> {item.product_name}</p>
                         <p className="text-sm text-gray-600"><span className="font-medium">Barcode:</span> {item.barcode}</p>
