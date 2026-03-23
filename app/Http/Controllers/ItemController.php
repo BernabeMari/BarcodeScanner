@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\Request as ItemRequest;
 use App\Models\RequestAudit;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
@@ -14,7 +15,8 @@ class ItemController extends Controller
     }
 
     public function createUserPage(){
-        return inertia('AdminDashboard/CreateUser');
+        $users = User::all();
+        return inertia('AdminDashboard/CreateUser', ['users' => $users]);
     }
 
     public function adminPage(){
@@ -403,5 +405,42 @@ class ItemController extends Controller
             ->get();
 
         return inertia('AdminDashboard/AuditLogs', ['logs' => $logs]);
+    }
+
+    public function removeVerifiedItem($requestId, Request $request){
+        $request->validate([
+            'barcode' => 'required|string',
+        ]);
+
+        $req = ItemRequest::findOrFail($requestId);
+
+        if ($req->status !== 'pending') {
+            return back()->withErrors(['barcode' => 'Only pending requests can be modified.']);
+        }
+
+        $barcodes = $req->item_barcodes ?? [];
+        if (!in_array($request->barcode, $barcodes, true)) {
+            return back()->withErrors(['barcode' => 'This item is not part of the verified items for this request.']);
+        }
+
+        $updatedBarcodes = array_values(array_filter($barcodes, function($b) use ($request) {
+            return $b !== $request->barcode;
+        }));
+
+        $req->item_barcodes = $updatedBarcodes;
+        $req->save();
+
+        RequestAudit::create([
+            'request_id' => $req->id,
+            'actor_user_id' => $request->user()->id,
+            'action' => 'item_verified_removed',
+            'from_status' => $req->status,
+            'to_status' => $req->status,
+            'metadata' => [
+                'removed_barcode' => $request->barcode,
+            ],
+        ]);
+
+        return back()->with('success', 'Item removed from verified list for this request.');
     }
 }

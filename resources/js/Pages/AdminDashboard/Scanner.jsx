@@ -29,10 +29,9 @@ export default function Index() {
   }
 
   return (
-
+        <div className="min-h-screen bg-cover bg-center" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}>
     <Layout>
-      <SidebarLayout>
-        <div className="min-h-screen">
+      <SidebarLayout set>
 
       <input type="text" placeholder="Scan barcode" autoFocus onKeyDown={(e) => {
       if (e.key === "Enter") {
@@ -59,8 +58,8 @@ export default function Index() {
           </div>
         )}
       </div>
-    </div>
         </SidebarLayout>
             </Layout>
+    </div>
   );
 }

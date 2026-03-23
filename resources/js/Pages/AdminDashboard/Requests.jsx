@@ -36,12 +36,17 @@ export default function Requests({ requests }) {
         router.post(route("update_request", id), { status, message }, { preserveScroll: true })
     }
 
+    function removeVerifiedItem(requestId, barcode) {
+        router.post(route("remove_verified_item", requestId), { barcode }, { preserveScroll: true })
+    }
     return (
-        <div>
+        <div className="min-h-screen bg-cover bg-center"
+            style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}
+        >
             <Layout>
                 <SidebarLayout>
-                    <h1 className="text-2xl font-semibold mb-4">Employee requests</h1>
-                    <p className="text-gray-600 mb-2">
+                    <h1 className="text-2xl font-semibold text-white mb-4">Employee requests</h1>
+                    <p className="text-gray-200 mb-2">
                         Scan or enter one or more barcodes while the request is pending. Items
                         stay active during verification and are set to inactive only when the
                         request is approved.
@@ -104,7 +109,10 @@ export default function Requests({ requests }) {
                                                     <li key={item.barcode}>
                                                         {item.product_name} - barcode{" "}
                                                         <code className="text-xs">{item.barcode}</code>
-                                                    </li>
+                                                        <button onClick={() => removeVerifiedItem(req.id, item.barcode)} type="button" className="ml-2 text-sm text-red-500 hover:text-red-700">
+                                                            Remove
+                                                        </button>
+                                                    </li>       
                                                 ))}
                                             </ul>
                                         </div>
