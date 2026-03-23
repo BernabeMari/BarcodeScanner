@@ -1,4 +1,5 @@
 import { useForm } from "@inertiajs/react";
+import { useState } from "react";
 
 export default function Login() {
   const { data, setData, post } = useForm({
@@ -6,9 +7,13 @@ export default function Login() {
     password: "",
   });
 
+  const [showMessage, setShowMessage] = useState(false);
+  
   function login(e) {
     e.preventDefault();
-    post(route("login")); // Send POST request to Laravel
+    post(route("login"),{
+      onError: () => setShowMessage(true)
+    }); // Send POST request to Laravel
   }
 
   return (
@@ -48,6 +53,12 @@ export default function Login() {
             Login
           </button>
         </form>
+
+        {showMessage && (
+          <p className="text-center text-red-600 font-medium mb-4">
+            Invalid username or password.
+          </p>
+        )}
       </div>
     </div>
   );
