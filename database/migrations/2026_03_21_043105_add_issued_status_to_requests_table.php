@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('requests', function (Blueprint $table) {
-            $table->timestamp('issued_at')->nullable()->after('cancelled_at');
+            $table->timestamp('issued_at')->nullable();
             $table->timestamp('issuance_cancelled_at')->nullable()->after('issued_at');
         });
 

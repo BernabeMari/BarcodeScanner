@@ -40,7 +40,7 @@ export default function MyRequests({ requests }) {
                             className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
                             >
                                 <p className="text-gray-800">
-                                    <span className="font-medium">Request:</span> {req.message}
+                                    <span className="font-medium">Request:</span> {req.message.join(', ')}
                                 </p>
                                 <p className="mt-2 text-sm">
                                     <span className="font-medium">Status:</span>{" "}

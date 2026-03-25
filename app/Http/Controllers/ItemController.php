@@ -95,7 +95,7 @@ class ItemController extends Controller
 
     public function submitRequest(Request $request){
         $request->validate([
-            'message' => 'required|string',
+            'message' => 'required|array',
         ]);
 
         $req = \App\Models\Request::create([

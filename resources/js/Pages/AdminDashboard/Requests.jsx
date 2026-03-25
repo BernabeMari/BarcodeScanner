@@ -80,7 +80,7 @@ export default function Requests({ requests }) {
                                     </p>
                                     <p className="mt-3 text-gray-800">
                                         <span className="font-medium">Request:</span>{" "}
-                                        {req.message}
+                                        {req.message.join(', ')}
                                     </p>
                                     <p className="mt-2 text-sm">
                                         <span className="font-medium">Status:</span>{" "}

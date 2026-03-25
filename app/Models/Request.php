@@ -22,6 +22,7 @@ class Request extends Model
 
     protected $casts = [
         'item_barcodes' => 'array',
+        'message' => 'array',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'cancelled_at' => 'datetime',
