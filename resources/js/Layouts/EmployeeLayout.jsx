@@ -3,24 +3,34 @@ export default function SidebarLayoutEmployee({ children }) {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="bg-black text-white w-80 p-4 flex flex-col gap-2">
-        <Link className="bg-blue-500 p-2 rounded-lg hover:bg-blue-700" href={route('employee_page')}>
-          New request
+      <aside className="fixed linear-gradient(to right, #ff416c, #ff4b2b) text-white w-80 p-4 flex flex-col">
+        <Link href={route("employee_page")} className={`p-2 inline-block rounded-xl m-2 border transition
+    ${route().current("employee_page")
+      ? "bg-gradient-to-r from-[#ffffff] to-[#ff4b2b] text-black font-semibold border-white"
+      : "linear-gradient(to right, #ff416c, #ff4b2b) border-transparent hover:border-white"}`}
+        >
+        New Request
         </Link>
-        <Link className="bg-blue-500 p-2 rounded-lg hover:bg-blue-700" href={route('employee_my_requests')}>
-          My requests
+
+        
+        <Link href={route("employee_my_requests")} className={`p-2 inline-block rounded-xl m-2 border transition
+    ${route().current("employee_my_requests")
+      ? "bg-gradient-to-r from-[#ffffff] to-[#ff4b2b] text-black font-semibold border-white"
+      : "linear-gradient(to right, #ff416c, #ff4b2b) border-transparent hover:border-white"}`}
+        >
+        My Requests
         </Link>
         <button
           type="button"
           onClick={() => router.post(route('logout'))}
-          className="bg-red-500 p-2 rounded-lg hover:bg-red-700 text-left"
+          className="linear-gradient(to right, #ff416c, #ff4b2b) p-2 inline-block rounded-xl m-2 border border-transparent hover:border-white transition text-left"
         >
           Logout
         </button>
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 ml-80">
         {children}
       </div>
     </div>
