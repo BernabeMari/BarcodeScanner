@@ -10,6 +10,7 @@ export default function Index() {
     product_name: '',
     quantity: 0,
     status: 'active',
+    break: 'not_break'
   })
 
   function submit_item(e){

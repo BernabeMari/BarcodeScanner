@@ -11,5 +11,6 @@ class Item extends Model
         'product_name',
         'quantity',
         'status',
+        'break'
     ];
 }

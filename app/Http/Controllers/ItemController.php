@@ -63,6 +63,8 @@ class ItemController extends Controller
             'product_name' => 'required',
             'quantity' => 'required',
             'status' => 'required',
+            'break' => 'required',
+
         ]);
 
         Item::create($items);

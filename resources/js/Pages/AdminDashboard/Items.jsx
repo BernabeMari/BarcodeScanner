@@ -6,6 +6,8 @@ export default function({items}){
     const [showAllItem, showAllItemState] = useState(true)
     const [showLowItem, showLowItemState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)
+    const [showBreakConfirmation, showBreakConfirmationState] = useState(false)
+    
     return(
         <div className="min-h-screen bg-cover bg-center flex flex-col"
       style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
@@ -29,28 +31,97 @@ export default function({items}){
             <div>
                 {showAllItem && items.filter(item => item.status === "active").map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
-                        <p className="text-sm text-gray-600"><span className="font-medium">Product Name:</span> {item.product_name}</p>
-                        <p className="text-sm text-gray-600"><span className="font-medium">Barcode:</span> {item.barcode}</p>
-                        <p className="text-sm text-gray-600"><span className="font-medium">Quantity:</span> {item.quantity}</p>
-                    </div>
+                        <div
+                        key={item.id}
+                        className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
+                        >
+                        <div>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Product Name:</span> {item.product_name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Barcode:</span> {item.barcode}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Quantity:</span> {item.quantity}
+                            </p>
+                        </div>
+
+                        <button type="button" onClick={()=>showBreakConfirmationState(true)} className="bg-red-400 p-4 rounded-3xl">
+                            Break
+                        </button>
+                        </div>
+                </div>
                 ))}
 
                 {showLowItem && items.filter(item => item.quantity <= 30 && item.status === "active").map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
-                        <p className="text-sm text-gray-600"><span className="font-medium">Product Name:</span> {item.product_name}</p>
-                        <p className="text-sm text-gray-600"><span className="font-medium">Barcode:</span> {item.barcode}</p>
-                        <p className="text-sm text-gray-600"><span className="font-medium">Quantity:</span> {item.quantity}</p>
-                    </div>
+                        <div
+                        key={item.id}
+                        className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
+                        >
+                        <div>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Product Name:</span> {item.product_name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Barcode:</span> {item.barcode}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Quantity:</span> {item.quantity}
+                            </p>
+                        </div>
+
+                        <button type="button" onClick={()=>showBreakConfirmationState(true)} className="bg-red-400 p-4 rounded-3xl">
+                            Break
+                        </button>
+                        </div>
+                </div>
                 ))}
 
                 {showHighItem && items.filter(item => item.quantity >= 30 && item.status === "active").map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
-                        <p className="text-sm text-gray-600"><span className="font-medium">Product Name:</span> {item.product_name}</p>
-                        <p className="text-sm text-gray-600"><span className="font-medium">Barcode:</span> {item.barcode}</p>
-                        <p className="text-sm text-gray-600"><span className="font-medium">Quantity:</span> {item.quantity}</p>
+                        <div
+                        key={item.id}
+                        className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
+                        >
+                        <div>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Product Name:</span> {item.product_name}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Barcode:</span> {item.barcode}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Quantity:</span> {item.quantity}
+                            </p>
+                        </div>
+
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true); item.id}} className="bg-red-400 p-4 rounded-3xl">
+                            Break
+                        </button>
+                        </div>
                 </div>
                 ))}
             </div>
+
+            <div className="flex fixed rounded-3xl bg-slate-500 w-80 justify-center items-center">
+                {showBreakConfirmation && (
+                    <div className="fixed inset-0 flex justify-center items-center bg-black/50">
+                        <div className="bg-slate-500 w-auto rounded-3xl p-6">
+                             Are you sure you want to Break this ITEM?
+                             <div className="flex-row flex justify-center mt-4 mr-4 ml-4 gap-10">
+                                <div>
+                                    <button type="button" onClick={() => showBreakConfirmationState(false)} className="bg-green-400 hover:bg-green-600 rounded-3xl p-4">No</button>
+                                </div>
+                                <div>
+                                    <button type="button" onClick={() => { item.break = 'break'; showBreakConfirmationState(false); }} className="bg-red-400 hover:bg-red-600 rounded-3xl p-4">Yes</button>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+            )}
+        </div>
         </div>
                 </SidebarLayout>
             </Layout>
