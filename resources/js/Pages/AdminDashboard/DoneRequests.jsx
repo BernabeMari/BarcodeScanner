@@ -38,11 +38,13 @@ export default function DoneRequests({ requests, filter, search }) {
     }
 
     return (
-        <div>
+        <div className="min-h-screen bg-cover bg-center"
+            style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}
+        >
             <Layout>
                 <SidebarLayout>
                     <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-                        <h1 className="text-2xl font-semibold">Done requests</h1>
+                        <h1 className="text-2xl font-semibold text-white">Done requests</h1>
                         <div className="flex gap-2 flex-wrap">
                             <button
                                 type="button"

@@ -8,9 +8,11 @@ function formatWhen(value) {
 
 export default function AuditLogs({ logs }) {
     return (
-        <div>
+        <div className="min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
+>
             <Layout>
-                <SidebarLayout>
+                <SidebarLayout >
                     <h1 className="text-2xl font-semibold mb-4">Audit logs</h1>
 
                     {logs.length === 0 ? (
@@ -27,7 +29,7 @@ export default function AuditLogs({ logs }) {
                                         {formatWhen(log.created_at)}
                                     </p>
                                     <p className="text-sm text-gray-600 mt-1">
-                                        <span className="font-medium">Request by:</span>{" "}
+                                        <span className="font-medium">Actor:</span>{" "}
                                         {log.actor?.username ?? "Unknown"}
                                     </p>
                                     <p className="mt-2 text-gray-900">

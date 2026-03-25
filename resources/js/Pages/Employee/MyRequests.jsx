@@ -1,4 +1,5 @@
 import EmployeeLayout from "@/Layouts/EmployeeLayout"
+import Layout from "@/Layouts/Layout"
 import { router, usePage } from "@inertiajs/react"
 
 function statusClass(status) {
@@ -14,7 +15,9 @@ export default function MyRequests({ requests }) {
     const { errors, flash } = usePage().props
 
     return (
-        <div>
+        <div className="min-h-screen bg-cover bg-center"
+      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}>
+            <Layout>
             <EmployeeLayout>
                 <h1 className="text-2xl font-semibold mb-2">My requests</h1>
                 <p className="text-gray-600 mb-6">
@@ -33,8 +36,8 @@ export default function MyRequests({ requests }) {
                     <ul className="space-y-4">
                         {requests.map((req) => (
                             <li
-                                key={req.id}
-                                className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+                            key={req.id}
+                            className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
                             >
                                 <p className="text-gray-800">
                                     <span className="font-medium">Request:</span> {req.message}
@@ -95,8 +98,8 @@ export default function MyRequests({ requests }) {
 
                                 {req.status === "pending" && (
                                     <button
-                                        type="button"
-                                        onClick={() =>
+                                    type="button"
+                                    onClick={() =>
                                             router.post(route("cancel_request", req.id))
                                         }
                                         className="mt-4 bg-slate-700 hover:bg-slate-900 text-white px-4 py-2 rounded-lg"
@@ -119,6 +122,7 @@ export default function MyRequests({ requests }) {
                     </ul>
                 )}
             </EmployeeLayout>
+            </Layout>
         </div>
     )
 }
