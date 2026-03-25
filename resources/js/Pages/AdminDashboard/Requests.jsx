@@ -78,9 +78,18 @@ export default function Requests({ requests }) {
                                             ? req.user.department
                                             : "—"}
                                     </p>
-                                    <p className="mt-3 text-gray-800">
-                                        <span className="font-medium">Request:</span>{" "}
-                                        {req.message.join(', ')}
+                                     <p className="text-gray-800">
+                                    <span className="font-medium">Request Type: ({req.request_type})</span>
+                                    </p>
+                                    <p className="text-gray-800">
+                                    <span className="font-medium">Request:</span>
+                                    <ul className="ml-4 list-disc">
+                                        {req.message.map((msg, index) => (
+                                        <li key={index}>
+                                            {msg} – {req.request_quantity[index]}
+                                        </li>
+                                        ))}
+                                    </ul>
                                     </p>
                                     <p className="mt-2 text-sm">
                                         <span className="font-medium">Status:</span>{" "}

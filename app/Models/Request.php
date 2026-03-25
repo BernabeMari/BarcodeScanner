@@ -10,7 +10,9 @@ class Request extends Model
     protected $fillable = [
         'user_id',
         'message',
+        'request_type',
         'status',
+        'request_quantity',
         'item_barcode',
         'item_barcodes',
         'approved_at',
@@ -23,6 +25,7 @@ class Request extends Model
     protected $casts = [
         'item_barcodes' => 'array',
         'message' => 'array',
+        'request_quantity' => 'array',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'cancelled_at' => 'datetime',

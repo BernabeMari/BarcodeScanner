@@ -96,11 +96,15 @@ class ItemController extends Controller
     public function submitRequest(Request $request){
         $request->validate([
             'message' => 'required|array',
+            'request_type' => 'required',
+            'request_quantity' => 'required|array'
         ]);
 
         $req = \App\Models\Request::create([
             'user_id' => $request->user()->id,
             'message' => $request->message,
+            'request_type' => $request->request_type,
+            'request_quantity' => $request->request_quantity,
         ]);
 
         // Notify admins
