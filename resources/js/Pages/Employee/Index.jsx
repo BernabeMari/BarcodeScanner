@@ -2,7 +2,7 @@ import EmployeeLayout from "@/Layouts/EmployeeLayout"
 import Layout from "@/Layouts/Layout"
 import { useForm } from "@inertiajs/react"
 import { useState } from "react"
-export default function(){
+export default function({users}){
     
     const {post, data: requestData, setData: setRequestData, reset: resetForm} = useForm({
         message: '',
@@ -20,6 +20,7 @@ export default function(){
       style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}>
                 <Layout>
                 <EmployeeLayout>
+                    <p>Welcome {users.department}</p>
                     <h1>Employee Dashboard</h1>
                     <form onSubmit={submitRequest} className="flex flex-col">
                         <textarea value={requestData.message} onChange={(e) => setRequestData('message', e.target.value)} placeholder="Enter your request for items" rows="4"/>

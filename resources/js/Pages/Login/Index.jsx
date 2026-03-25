@@ -24,10 +24,10 @@ export default function Login() {
           "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')",
       }}
     >
-      <div className="w-96 rounded-xl border border-red-600 bg-white shadow-lg">
-        <div className="bg-red-600 rounded-t-xl py-6">
-          <p className="text-center text-white font-bold text-2xl">
-            Welcome to Inventory ewan
+      <div className="w-96 rounded-xl border bg-transparent border-red-600 bg-white shadow-lg">
+        <div className="bg-red-600 opacity-50 rounded-t-xl py-6">
+          <p className="text-center text-white font-bold text-4xl">
+            Welcome to TCU Inventory 
           </p>
         </div>
 
@@ -37,18 +37,18 @@ export default function Login() {
             value={data.username}
             onChange={(e) => setData("username", e.target.value)}
             placeholder="Enter Username"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-600 focus:ring-red-600 bg-slate-100"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-600 focus:ring-red-600 bg-slate-100 opacity-90"
           />
           <input
             type="password"
             value={data.password}
             onChange={(e) => setData("password", e.target.value)}
             placeholder="Enter Password"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-600 focus:ring-red-600 bg-slate-100"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-600 focus:ring-red-600 bg-slate-100 opacity-90"
           />
           <button
             type="submit"
-            className="w-full bg-red-600 text-white font-semibold py-2 rounded-md hover:bg-red-700 transition"
+            className="w-full bg-red-600 text-white font-semibold py-2 rounded-md hover:bg-red-700 transition opacity-90"
           >
             Login
           </button>

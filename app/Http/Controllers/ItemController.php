@@ -7,6 +7,7 @@ use App\Models\Request as ItemRequest;
 use App\Models\RequestAudit;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
 {
@@ -88,7 +89,8 @@ class ItemController extends Controller
     }
 
     public function employeePage(){
-        return inertia('Employee/Index');
+        $users = Auth::user();
+        return inertia('Employee/Index', ['users' => $users]);
     }
 
     public function submitRequest(Request $request){

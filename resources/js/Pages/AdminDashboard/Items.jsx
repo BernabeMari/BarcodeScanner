@@ -12,6 +12,7 @@ export default function({items}){
 >
             <Layout>
                 <SidebarLayout>
+        <div className="text-white text-2xl font-bold mb-4">
             <div className="flex justify-center">
                 <button onClick={()=>{showAllItemState(true); showHighItemState(false); showLowItemState(false)}} type="button" className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                     All Item
@@ -50,6 +51,7 @@ export default function({items}){
                 </div>
                 ))}
             </div>
+        </div>
                 </SidebarLayout>
             </Layout>
         </div>

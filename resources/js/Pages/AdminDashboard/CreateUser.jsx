@@ -19,11 +19,11 @@ export default function({ users }){
     }
     return(
         <div className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
->
+        style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
+        >
             <Layout>
                 <SidebarLayout>
-                    <form onSubmit={createUser} className="flex flex-col">
+                    <form onSubmit={createUser} className="flex flex-col p-4 bg-white bg-opacity-90 rounded-lg mb-5">
                         <input type="text" value={createData.username} onChange={(e) => setCreateData('username', e.target.value)} placeholder="Enter Username"/>
                         <input type="text" value={createData.password} onChange={(e) => setCreateData('password', e.target.value)} placeholder="Enter Password"/>
                         <select value={createData.role} onChange={(e) => setCreateData('role', e.target.value)}>
