@@ -6,10 +6,12 @@ import { useForm } from "@inertiajs/react"
 export default function({items}){
     const [showAllItem, showAllItemState] = useState(true)
     const [showLowItem, showLowItemState] = useState(false)
+    const [showEditQty, showEditQtyState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)
     const [showBreakConfirmation, showBreakConfirmationState] = useState(false)
     const {put, data, setData, reset} = useForm({
-        break: '', 
+        break: '',
+        quantity: '',
     })
 
     function handleBreak(e){
@@ -57,7 +59,7 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break')}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break'); setData('quantity', item.quantity)}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -82,7 +84,7 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break')}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break'); setData('quantity', item.quantity)}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -107,7 +109,7 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break')}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break'); setData('quantity', item.quantity)}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -125,13 +127,28 @@ export default function({items}){
                                     <button type="button" onClick={() => showBreakConfirmationState(false)} className="bg-green-400 hover:bg-green-600 rounded-3xl p-4">No</button>
                                 </div>
                                 <div>
-                                    <button type="button" onClick={handleBreak} className="bg-red-400 hover:bg-red-600 rounded-3xl p-4">Yes</button>
+                                    <button type="button" onClick={() => {showBreakConfirmationState(false); showEditQtyState(true);}} className="bg-red-400 hover:bg-red-600 rounded-3xl p-4">Yes</button>
                                 </div>
                              </div>
                         </div>
                     </div>
             )}
         </div>
+
+            <div className="flex fixed rounded-3xl bg-slate-500 w-80 justify-center items-center">
+                {showEditQty && (
+                    <div className="fixed inset-0 flex justify-center items-center bg-black/50">
+                        <div className="bg-slate-500 w-auto rounded-3xl p-6">
+                            Set Quantity for Break Item
+
+                            <div>Current Quantity of Item: {data.quantity}</div>
+
+                            <input type="number" className="rounded-full m-4 p-2" placeholder="Enter Quantity" onChange={(e) => setData('quantity', e.target.value)} />
+                            <button type="button" onClick={handleBreak} className="bg-blue-400 hover:bg-blue-600 rounded-3xl p-4">Submit</button>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
                 </SidebarLayout>
             </Layout>
