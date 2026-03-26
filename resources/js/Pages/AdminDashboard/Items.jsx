@@ -1,13 +1,23 @@
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
 import { useState } from "react"
+import { useForm } from "@inertiajs/react"
 
 export default function({items}){
     const [showAllItem, showAllItemState] = useState(true)
     const [showLowItem, showLowItemState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)
     const [showBreakConfirmation, showBreakConfirmationState] = useState(false)
-    
+    const {put, data, setData, reset} = useForm({
+        break: '', 
+    })
+
+    function handleBreak(e){
+        setData('break', 'break')
+        put(route('update_break_item', data.id),{
+                onSuccess: () => showBreakConfirmationState(false)
+        })
+    }
     return(
         <div className="min-h-screen bg-cover bg-center flex flex-col"
       style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
@@ -29,7 +39,7 @@ export default function({items}){
             </div>
 
             <div>
-                {showAllItem && items.filter(item => item.status === "active").map(item =>(
+                {showAllItem && items.filter(item => item.status === "active" && item.break === 'not_break').map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <div
                         key={item.id}
@@ -47,14 +57,14 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>showBreakConfirmationState(true)} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break')}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
                 </div>
                 ))}
 
-                {showLowItem && items.filter(item => item.quantity <= 30 && item.status === "active").map(item =>(
+                {showLowItem && items.filter(item => item.quantity <= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <div
                         key={item.id}
@@ -72,14 +82,14 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>showBreakConfirmationState(true)} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break')}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
                 </div>
                 ))}
 
-                {showHighItem && items.filter(item => item.quantity >= 30 && item.status === "active").map(item =>(
+                {showHighItem && items.filter(item => item.quantity >= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <div
                         key={item.id}
@@ -97,7 +107,7 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true); item.id}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break')}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -115,7 +125,7 @@ export default function({items}){
                                     <button type="button" onClick={() => showBreakConfirmationState(false)} className="bg-green-400 hover:bg-green-600 rounded-3xl p-4">No</button>
                                 </div>
                                 <div>
-                                    <button type="button" onClick={() => { item.break = 'break'; showBreakConfirmationState(false); }} className="bg-red-400 hover:bg-red-600 rounded-3xl p-4">Yes</button>
+                                    <button type="button" onClick={handleBreak} className="bg-red-400 hover:bg-red-600 rounded-3xl p-4">Yes</button>
                                 </div>
                              </div>
                         </div>

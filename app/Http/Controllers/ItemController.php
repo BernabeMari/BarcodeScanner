@@ -29,6 +29,11 @@ class ItemController extends Controller
         return inertia('AdminDashboard/Items', ['items' => $items]);
     }
 
+    public function breakItemsPage(){
+        $items = Item::where('break', 'break')->get();
+        return inertia('AdminDashboard/BreakItems', ['items' => $items]);
+    }   
+
     public function scan(Request $request)
     {
         
@@ -450,5 +455,18 @@ class ItemController extends Controller
         ]);
 
         return back()->with('success', 'Item removed from verified list for this request.');
+    }
+
+    public function updateBreakItem(Request $request, $id){
+        $item = Item::findOrFail($id);
+
+        $request->validate([
+            'break' => 'required',
+        ]);
+
+        $item->break = $request->break;
+        $item->save();
+
+        return back()->with('success', 'Item break status updated.');
     }
 }

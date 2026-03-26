@@ -34,6 +34,16 @@ export default function SidebarLayout({ children }) {
     >
       Available Items
     </Link>
+    
+    <Link
+      href={route("break_items_page")}
+      className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
+        ${route().current("break_items_page")
+          ? "bg-gradient-to-r from-white to-[#ff4b2b] text-black font-semibold border-white"
+          : "bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] border-transparent hover:border-white"}`}
+    >
+      Breaked Items
+    </Link>
 
     <Link
       href={route("inactive_items_page")}

@@ -15,6 +15,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->group(function(){
     Route::get('/admin', 'adminPage')->name('admin_page');
     Route::get('/Items', 'itemPage')->name('items_page');
+    Route::get('/BreakItems', 'breakItemsPage')->name('break_items_page');
     Route::get('/scan', 'scanPage')->name('scanner_page');
     Route::get('/search/{barcode?}', 'searchPage')->name('search_page');
     Route::post('/scan-product', 'scan');
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->gr
     Route::post('/requests/{id}/mark-issued', 'markRequestIssued')->name('mark_request_issued');
     Route::post('/requests/{id}/cancel-issuance', 'cancelRequestIssuance')->name('cancel_request_issuance');
     Route::post('/requests/{id}/remove-verified-item', 'removeVerifiedItem')->name('remove_verified_item');
+    Route::put('/items/{id}/update', 'updateBreakItem')->name('update_break_item');
 });
 
 Route::middleware(['auth', 'role:employee'])->controller(ItemController::class)->group(function(){
