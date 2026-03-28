@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('barcode')->unique();
             $table->string('product_name');
-            $table->integer('quantity')->default(0);
+            $table->integer('quantity_pack')->default(0);
+            $table->integer('quantity_piece')->default(0);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->enum('break', ['break', 'not_break'])->default('not_break');
             $table->timestamps();

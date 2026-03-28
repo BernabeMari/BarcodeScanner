@@ -18,7 +18,7 @@ export default function({items}){
                     <span className="font-medium">Barcode:</span> {item.barcode}
                 </p>
                 <p className="text-sm text-gray-600">
-                    <span className="font-medium">Quantity:</span> {item.quantity}
+                    <span className="font-medium">Quantity:</span> {item.quantity_pack}
                 </p>
             </div>
         ))}

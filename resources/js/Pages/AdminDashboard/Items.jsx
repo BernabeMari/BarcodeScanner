@@ -13,18 +13,20 @@ export default function({items}){
     const {put, data, setData} = useForm({
         id: '',
         break: '',
-        quantity: '',
+        quantity_piece: '',
+        quantity_pack: '',
     })
     const {data: data_negate_Qty, setData: setData_negate_Qty} = useForm({
-        quantity: '',
+        quantity_piece: '',
+        quantity_pack: '',
     })
 
    function handleBreak(e) {
     e.preventDefault();
-    const newQty = data.quantity - data_negate_Qty.quantity;
+    const newQty = data.quantity_pack - data_negate_Qty.quantity_pack;
 
     router.put(route('update_break_item', data.id), {
-        quantity: newQty,
+        quantity_pack: newQty,
         break: 'break',
     }, {
         onSuccess: () => {
@@ -68,18 +70,21 @@ export default function({items}){
                             <span className="font-medium">Barcode:</span> {item.barcode}
                             </p>
                             <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity:</span> {item.quantity}
+                            <span className="font-medium">Quantity / Pack:</span> {item.quantity_pack}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Quantity / Piece:</span> {item.quantity_piece}
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity: item.quantity})}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity_pack: item.quantity_pack})}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
                 </div>
                 ))}
 
-                {showLowItem && items.filter(item => item.quantity <= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
+                {showLowItem && items.filter(item => item.quantity_pack <= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <div
                         key={item.id}
@@ -93,18 +98,21 @@ export default function({items}){
                             <span className="font-medium">Barcode:</span> {item.barcode}
                             </p>
                             <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity:</span> {item.quantity}
+                            <span className="font-medium">Quantity / Pack:</span> {item.quantity_pack}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Quantity / Piece:</span> {item.quantity_piece}
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity: item.quantity})}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity_pack: item.quantity_pack})}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
                 </div>
                 ))}
 
-                {showHighItem && items.filter(item => item.quantity >= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
+                {showHighItem && items.filter(item => item.quantity_pack >= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
                     <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
                         <div
                         key={item.id}
@@ -118,11 +126,14 @@ export default function({items}){
                             <span className="font-medium">Barcode:</span> {item.barcode}
                             </p>
                             <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity:</span> {item.quantity}
+                            <span className="font-medium">Quantity / Pack:</span> {item.quantity_pack}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                            <span className="font-medium">Quantity / Piece:</span> {item.quantity_piece}
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity: item.quantity})}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity_pack: item.quantity_pack})}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -155,10 +166,10 @@ export default function({items}){
                         <div className="bg-slate-500 w-auto rounded-3xl p-6">
                             Set Quantity for Break Item
 
-                            <div>Current Quantity of Item: {data.quantity}</div>
+                            <div>Current Quantity of Item: {data.quantity_pack}</div>
 
                             <form onSubmit={handleBreak}>
-                                <input type="number" className="rounded-full text-black m-4 p-2" placeholder="Enter Quantity" value={data_negate_Qty.quantity} onChange={(e) => setData_negate_Qty('quantity', e.target.value)} />
+                                <input type="number" className="rounded-full text-black m-4 p-2" placeholder="Enter Quantity" value={data_negate_Qty.quantity_pack} onChange={(e) => setData_negate_Qty('quantity_pack', e.target.value)} />
                                 <button type="submit" className="bg-blue-400 hover:bg-blue-600 rounded-3xl p-4">Submit</button>
                             </form>
                         </div>

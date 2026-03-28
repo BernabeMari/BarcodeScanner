@@ -39,7 +39,8 @@ export default function Search({ item, error }) {
                             <div className="font-semibold">Item found:</div>
                             <div>Name: {item.product_name}</div>
                             <div>Barcode: {item.barcode}</div>
-                            <div>Quantity: {item.quantity}</div>
+                            <div>Quantity / Pack: {item.quantity_pack}</div>
+                            <div>Quantity / Piece: {item.quantity_piece}</div>
                             <div>Department: {item.department}</div>
                             <div>
                                 {item.status === "active" ? (

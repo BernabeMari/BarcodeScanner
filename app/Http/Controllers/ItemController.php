@@ -66,7 +66,8 @@ class ItemController extends Controller
         $items = $request->validate([
             'barcode' => 'required',
             'product_name' => 'required',
-            'quantity' => 'required',
+            'quantity_pack' => 'required',
+            'quantity_piece' => 'required',
             'status' => 'required',
             'break' => 'required',
 
@@ -461,10 +462,10 @@ class ItemController extends Controller
         $item = Item::findOrFail($id);
 
         $request->validate([
-            'quantity' => 'required|integer|min:0',
+            'quantity_pack' => 'required|integer|min:0',
         ]);
 
-        $item->quantity = $request->quantity;
+        $item->quantity_pack = $request->quantity_pack;
         $item->save();
 
         return back()->with('success', 'Item break status updated.');

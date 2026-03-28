@@ -9,7 +9,8 @@ class Item extends Model
     protected $fillable = [
         'barcode',
         'product_name',
-        'quantity',
+        'quantity_pack',
+        'quantity_piece',
         'status',
         'break'
     ];

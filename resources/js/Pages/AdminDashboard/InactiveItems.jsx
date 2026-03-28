@@ -14,7 +14,9 @@ export default function({items}){
                             <div key={item.id}>
                                 Product: {item.product_name}
                                 <br />
-                                Quantity: {item.quantity}
+                                Quantity / Pack: {item.quantity_pack}
+                                <br />
+                                Quantity / Piece: {item.quantity_piece}
                                 <br />
                                 Barcode: {item.barcode}
                             </div>

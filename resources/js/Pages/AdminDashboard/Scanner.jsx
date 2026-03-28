@@ -8,7 +8,8 @@ export default function Index() {
   const {post, data: itemData, setData: setItemData, reset: resetItemForm} = useForm({
     barcode: '',
     product_name: '',
-    quantity: 0,
+    quantity_pack: 0,
+    quantity_piece: 0,
     status: 'active',
     break: 'not_break'
   })
@@ -48,10 +49,15 @@ export default function Index() {
         <div>
           {barcode && (
             <div className="flex justify-center items-center">
-            <form onSubmit={submit_item} className="flex flex-col">
+            <form onSubmit={submit_item} className="flex flex-col m-5">
+                <p>Barcode</p>
                 <input type="text" value={itemData.barcode} onChange={(e)=>setItemData('barcode', e.target.value)} readOnly className="border p-2 w-full cursor-not-allowed" autoFocus/>
+                <p>Enter Item's Name</p>
                 <input type="text" value={itemData.product_name} onChange={(e)=>setItemData('product_name', e.target.value)} placeholder="Enter Name" />
-                <input type="number" value={itemData.quantity} onChange={(e)=>setItemData('quantity', e.target.value)} placeholder="Quantity" />
+                <p>Enter Number of Pack</p>
+                <input type="number" value={itemData.quantity_pack} onChange={(e)=>setItemData('quantity_pack', e.target.value)} placeholder="Enter Quantity as Pack" />
+                <p>Enter Number of piece/s per pack</p>
+                <input type="number" value={itemData.quantity_piece} onChange={(e)=>setItemData('quantity_piece', e.target.value)} placeholder="Enter Quantity per Piece" />
                 <select readOnly value={itemData.status} onChange={(e)=>setItemData('status', e.target.value)} className="border p-2">
                   <option value="active">Active</option>
                 </select>
