@@ -461,10 +461,10 @@ class ItemController extends Controller
         $item = Item::findOrFail($id);
 
         $request->validate([
-            'break' => 'required',
+            'quantity' => 'required|integer|min:0',
         ]);
 
-        $item->break = $request->break;
+        $item->quantity = $request->quantity;
         $item->save();
 
         return back()->with('success', 'Item break status updated.');

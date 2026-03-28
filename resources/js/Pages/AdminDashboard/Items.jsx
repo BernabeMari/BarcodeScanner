@@ -2,6 +2,7 @@ import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
 import { useState } from "react"
 import { useForm } from "@inertiajs/react"
+import { router } from '@inertiajs/react'
 
 export default function({items}){
     const [showAllItem, showAllItemState] = useState(true)
@@ -9,17 +10,29 @@ export default function({items}){
     const [showEditQty, showEditQtyState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)
     const [showBreakConfirmation, showBreakConfirmationState] = useState(false)
-    const {put, data, setData, reset} = useForm({
+    const {put, data, setData} = useForm({
+        id: '',
         break: '',
         quantity: '',
     })
+    const {data: data_negate_Qty, setData: setData_negate_Qty} = useForm({
+        quantity: '',
+    })
 
-    function handleBreak(e){
-        setData('break', 'break')
-        put(route('update_break_item', data.id),{
-                onSuccess: () => showBreakConfirmationState(false)
-        })
-    }
+   function handleBreak(e) {
+    e.preventDefault();
+    const newQty = data.quantity - data_negate_Qty.quantity;
+
+    router.put(route('update_break_item', data.id), {
+        quantity: newQty,
+        break: 'break',
+    }, {
+        onSuccess: () => {
+            showBreakConfirmationState(false);
+            showEditQtyState(false);
+        }
+    });
+}
     return(
         <div className="min-h-screen bg-cover bg-center flex flex-col"
       style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
@@ -59,7 +72,7 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break'); setData('quantity', item.quantity)}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity: item.quantity})}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -84,7 +97,7 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break'); setData('quantity', item.quantity)}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity: item.quantity})}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
@@ -109,14 +122,15 @@ export default function({items}){
                             </p>
                         </div>
 
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData('id', item.id);setData('break', 'break'); setData('quantity', item.quantity)}} className="bg-red-400 p-4 rounded-3xl">
+                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity: item.quantity})}} className="bg-red-400 p-4 rounded-3xl">
                             Break
                         </button>
                         </div>
                 </div>
                 ))}
             </div>
-
+           
+            {/* Break Modal */}
             <div className="flex fixed rounded-3xl bg-slate-500 w-80 justify-center items-center">
                 {showBreakConfirmation && (
                     <div className="fixed inset-0 flex justify-center items-center bg-black/50">
@@ -143,8 +157,10 @@ export default function({items}){
 
                             <div>Current Quantity of Item: {data.quantity}</div>
 
-                            <input type="number" className="rounded-full m-4 p-2" placeholder="Enter Quantity" onChange={(e) => setData('quantity', e.target.value)} />
-                            <button type="button" onClick={handleBreak} className="bg-blue-400 hover:bg-blue-600 rounded-3xl p-4">Submit</button>
+                            <form onSubmit={handleBreak}>
+                                <input type="number" className="rounded-full text-black m-4 p-2" placeholder="Enter Quantity" value={data_negate_Qty.quantity} onChange={(e) => setData_negate_Qty('quantity', e.target.value)} />
+                                <button type="submit" className="bg-blue-400 hover:bg-blue-600 rounded-3xl p-4">Submit</button>
+                            </form>
                         </div>
                     </div>
                 )}
