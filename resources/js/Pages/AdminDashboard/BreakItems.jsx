@@ -1,18 +1,20 @@
 import Layout from "@/Layouts/Layout"
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import { formatBarcodes } from "@/utils/formatBarcodes"
-import { router } from "@inertiajs/react"
+import { router, usePage } from "@inertiajs/react"
 
 export default function BreakItemsPage({ items }) {
-    function distributeOnePiece(item) {
-        if (item.quantity_pack <= 0) {
+    const { errors } = usePage().props
+
+    const canUnbreak = (item) =>
+        item.break_initial_pieces != null &&
+        Number(item.quantity_pack) === Number(item.break_initial_pieces)
+
+    function unbreakItem(item) {
+        if (!canUnbreak(item)) {
             return
         }
-        router.put(
-            route("update_break_item", item.id),
-            { quantity_pack: item.quantity_pack - 1 },
-            { preserveScroll: true },
-        )
+        router.post(route("unbreak_break_item", item.id), {}, { preserveScroll: true })
     }
 
     return (
@@ -26,11 +28,11 @@ export default function BreakItemsPage({ items }) {
             <Layout>
                 <SidebarLayout>
                     <p className="text-white text-2xl font-bold mb-4">Break Items</p>
-                    <p className="text-gray-200 text-sm mb-4 max-w-2xl">
-                        Each row is one break line with its barcode. <strong>Pieces remaining</strong> counts single
-                        pieces you can hand out. Use <strong>Distribute 1 piece</strong> to record one piece issued.
-                        <strong> Pieces per pack</strong> is the original pack size (reference).
-                    </p>
+                    {errors?.unbreak && (
+                        <p className="text-red-200 text-sm mb-4 max-w-2xl">
+                            {Array.isArray(errors.unbreak) ? errors.unbreak[0] : errors.unbreak}
+                        </p>
+                    )}
                     {items.length === 0 ? (
                         <p className="text-gray-300">No break items yet.</p>
                     ) : (
@@ -57,12 +59,18 @@ export default function BreakItemsPage({ items }) {
                                 </p>
                                 <button
                                     type="button"
-                                    disabled={item.quantity_pack <= 0}
-                                    onClick={() => distributeOnePiece(item)}
+                                    disabled={!canUnbreak(item)}
+                                    onClick={() => unbreakItem(item)}
                                     className="mt-3 bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm"
                                 >
-                                    Distribute 1 piece
+                                    Unbreak item
                                 </button>
+                                {!canUnbreak(item) && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Unbreak is only available when pieces remaining matches the count from when
+                                        this line was created.
+                                    </p>
+                                )}
                             </div>
                         ))
                     )}

@@ -141,6 +141,7 @@ class ItemController extends Controller
                     : (($item->status === 'inactive') ? 'inactive' : 'active');
                 $item->break = 'break';
                 $item->quantity_pack = $pieces;
+                $item->break_initial_pieces = $pieces;
                 if (is_array($item->barcode) && count($item->barcode) === 1) {
                     $item->statuses = [$slot === 'inactive' ? 'inactive' : 'active'];
                 }
@@ -176,14 +177,17 @@ class ItemController extends Controller
             $item->quantity_pack = max(0, $item->quantity_pack - 1);
             $item->save();
 
+            $splitPieces = max(0, $item->quantity_piece);
+
             Item::create([
                 'barcode' => [$request->barcode],
                 'statuses' => ['active'],
                 'product_name' => $item->product_name,
-                'quantity_pack' => max(0, $item->quantity_piece),
+                'quantity_pack' => $splitPieces,
                 'quantity_piece' => $item->quantity_piece,
                 'status' => 'active',
                 'break' => 'break',
+                'break_initial_pieces' => $splitPieces,
             ]);
         });
 
@@ -204,8 +208,10 @@ class ItemController extends Controller
 
     }
 
-    public function inactive_items_page(){
-        $items = Item::where('status', 'inactive')->get();
+    public function inactive_items_page()
+    {
+        $items = Item::orderBy('id')->get();
+
         return inertia('AdminDashboard/InactiveItems', ['items' => $items]);
     }
 
@@ -359,7 +365,7 @@ class ItemController extends Controller
             ],
         ]);
 
-        return back()->with('success', 'Item verified and added to this request. It will be set to inactive on approval.');
+        return back()->with('success', 'Item verified and added to this request. It will be set to inactive when the request is marked issued.');
     }
 
     public function updateRequest($id, Request $request){
@@ -388,13 +394,7 @@ class ItemController extends Controller
                     }
                 }
 
-                foreach ($barcodes as $b) {
-                    $inv = Item::whereBarcodeContains($b)->first();
-                    if ($inv) {
-                        $inv->setBarcodeStatus($b, 'inactive');
-                        $inv->save();
-                    }
-                }
+                // Barcodes stay active until the request is marked issued (same idea as single flow timing).
             } elseif ($req->request_type === 'single') {
                 $alloc = $req->admin_break_allocations ?? [];
                 if (! is_array($alloc) || count($alloc) === 0) {
@@ -474,9 +474,41 @@ class ItemController extends Controller
             }
         }
 
-        $req->status = 'issued';
-        $req->issued_at = now();
-        $req->save();
+        DB::beginTransaction();
+        try {
+            if ($req->request_type === 'multiple') {
+                $barcodes = $req->item_barcodes ?? [];
+                if (count($barcodes) === 0) {
+                    DB::rollBack();
+
+                    return back()->withErrors(['status' => 'No verified barcodes to issue for this request.']);
+                }
+                foreach ($barcodes as $b) {
+                    $inv = Item::lockForUpdate()->whereBarcodeContains($b)->first();
+                    if (! $inv || ! $inv->barcodeIsActive($b)) {
+                        DB::rollBack();
+
+                        return back()->withErrors(['status' => 'One or more items are no longer active; cannot mark issued.']);
+                    }
+                }
+                foreach ($barcodes as $b) {
+                    $inv = Item::whereBarcodeContains($b)->first();
+                    if ($inv) {
+                        $inv->setBarcodeStatus($b, 'inactive');
+                        $inv->save();
+                    }
+                }
+            }
+
+            $req->status = 'issued';
+            $req->issued_at = now();
+            $req->save();
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         RequestAudit::create([
             'request_id' => $req->id,
@@ -722,5 +754,39 @@ class ItemController extends Controller
         $item->save();
 
         return back()->with('success', 'Quantity updated.');
+    }
+
+    /**
+     * Convert a break line back to pack-based stock only if piece count was never reduced from when it was broken.
+     */
+    public function unbreakBreakItem(Request $request, $id)
+    {
+        $item = Item::findOrFail($id);
+
+        if ($item->break !== 'break') {
+            return back()->withErrors(['unbreak' => 'Only break items can be unbroken.']);
+        }
+
+        if ($item->break_initial_pieces === null) {
+            return back()->withErrors(['unbreak' => 'This line cannot be unbroken (missing original piece snapshot).']);
+        }
+
+        if ($item->quantity_pack !== (int) $item->break_initial_pieces) {
+            return back()->withErrors(['unbreak' => 'Pieces have been distributed; this item can no longer be restored as a pack.']);
+        }
+
+        $piece = max(1, (int) $item->quantity_piece);
+        if ($item->break_initial_pieces % $piece !== 0) {
+            return back()->withErrors(['unbreak' => 'Cannot derive a whole pack count from the current piece totals.']);
+        }
+
+        $packs = (int) ($item->break_initial_pieces / $piece);
+
+        $item->break = 'not_break';
+        $item->quantity_pack = $packs;
+        $item->break_initial_pieces = null;
+        $item->save();
+
+        return back()->with('success', 'Item restored as pack-based stock.');
     }
 }

@@ -32,6 +32,7 @@ Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->gr
     Route::post('/requests/{id}/remove-verified-item', 'removeVerifiedItem')->name('remove_verified_item');
     Route::post('/requests/{id}/break-allocation', 'saveBreakAllocation')->name('save_break_allocation');
     Route::put('/items/{id}/update', 'updateBreakItem')->name('update_break_item');
+    Route::post('/items/{id}/unbreak', 'unbreakBreakItem')->name('unbreak_break_item');
     Route::post('/items/{id}/break-barcode', 'splitBarcodeBreak')->name('split_barcode_break');
 });
 

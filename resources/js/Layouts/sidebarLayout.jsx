@@ -42,7 +42,7 @@ export default function SidebarLayout({ children }) {
           ? "bg-gradient-to-r from-white to-[#ff4b2b] text-black font-semibold border-white"
           : "bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] border-transparent hover:border-white"}`}
     >
-      Breaked Items
+      Broken Items
     </Link>
 
     <Link

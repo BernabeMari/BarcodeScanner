@@ -16,11 +16,13 @@ class Item extends Model
         'quantity_piece',
         'status',
         'break',
+        'break_initial_pieces',
     ];
 
     protected $casts = [
         'barcode' => 'array',
         'statuses' => 'array',
+        'break_initial_pieces' => 'integer',
     ];
 
     protected static function booted(): void
