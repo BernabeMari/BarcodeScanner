@@ -60,6 +60,7 @@ export default function ReceiptPreview({ request, items, user }) {
                                                 <tr className="bg-gray-100">
                                                     <th className="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-900">Barcode</th>
                                                     <th className="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-900">Product Name</th>
+                                                    <th className="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-900">Qty</th>
                                                     <th className="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-900">Status</th>
                                                 </tr>
                                             </thead>
@@ -68,7 +69,12 @@ export default function ReceiptPreview({ request, items, user }) {
                                                     <tr key={item.barcode} className="hover:bg-gray-50">
                                                         <td className="px-4 py-2 border border-gray-300 text-sm text-gray-900">{item.barcode}</td>
                                                         <td className="px-4 py-2 border border-gray-300 text-sm text-gray-900">{item.product_name}</td>
-                                                        <td className="px-4 py-2 border border-gray-300 text-sm text-green-700 font-medium">Inactive (Issued)</td>
+                                                        <td className="px-4 py-2 border border-gray-300 text-sm text-gray-900">
+                                                            {item.issued_quantity != null ? item.issued_quantity : "—"}
+                                                        </td>
+                                                        <td className="px-4 py-2 border border-gray-300 text-sm text-green-700 font-medium">
+                                                            {item.issued_quantity != null ? "Break pieces issued" : "Inactive (Issued)"}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                             </tbody>

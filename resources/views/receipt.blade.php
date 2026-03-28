@@ -128,15 +128,21 @@
                 <tr>
                     <th>Barcode</th>
                     <th>Product Name</th>
+                    <th>Qty</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($items as $item)
+                @php
+                    $row = is_array($item) ? $item : $item->toArray();
+                    $qty = $row['issued_quantity'] ?? null;
+                @endphp
                 <tr>
-                    <td>{{ $item->barcode }}</td>
-                    <td>{{ $item->product_name }}</td>
-                    <td>(Issued)</td>
+                    <td>{{ $row['barcode'] ?? '' }}</td>
+                    <td>{{ $row['product_name'] ?? '' }}</td>
+                    <td>{{ $qty !== null ? $qty : '—' }}</td>
+                    <td>{{ $qty !== null ? 'Break pieces issued' : '(Issued)' }}</td>
                 </tr>
                 @endforeach
             </tbody>

@@ -30,7 +30,9 @@ Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->gr
     Route::post('/requests/{id}/mark-issued', 'markRequestIssued')->name('mark_request_issued');
     Route::post('/requests/{id}/cancel-issuance', 'cancelRequestIssuance')->name('cancel_request_issuance');
     Route::post('/requests/{id}/remove-verified-item', 'removeVerifiedItem')->name('remove_verified_item');
+    Route::post('/requests/{id}/break-allocation', 'saveBreakAllocation')->name('save_break_allocation');
     Route::put('/items/{id}/update', 'updateBreakItem')->name('update_break_item');
+    Route::post('/items/{id}/break-barcode', 'splitBarcodeBreak')->name('split_barcode_break');
 });
 
 Route::middleware(['auth', 'role:employee'])->controller(ItemController::class)->group(function(){

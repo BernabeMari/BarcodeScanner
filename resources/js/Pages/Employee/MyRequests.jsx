@@ -40,15 +40,23 @@ export default function MyRequests({ requests }) {
                             className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
                             >
                                 <p className="text-gray-800">
-                                <span className="font-medium">Request/s:</span>
-                                <ul className="ml-4 list-disc">
-                                    {req.message.map((msg, index) => (
-                                    <li key={index}>
-                                        {msg} - {req.request_quantity[index]}
-                                    </li>
-                                    ))}
-                                </ul>
+                                    <span className="font-medium">Request/s:</span>
+                                    <ul className="ml-4 list-disc">
+                                        {req.message.map((msg, index) => (
+                                            <li key={index}>
+                                                {msg} - {req.request_quantity[index]}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </p>
+                                {req.request_type === "single" && req.admin_break_allocations?.length > 0 && (
+                                    <div className="mt-2 text-sm text-blue-900 bg-blue-50 rounded p-2">
+                                        <span className="font-medium">Break item to issue (set by admin):</span>{" "}
+                                        {req.admin_break_allocations[0].product_name} —{" "}
+                                        {req.admin_break_allocations[0].quantity} piece(s) — barcode{" "}
+                                        <code className="text-xs">{req.admin_break_allocations[0].barcode}</code>
+                                    </div>
+                                )}
                                 <p className="mt-2 text-sm">
                                     <span className="font-medium">Request Type:</span>{" "}
                                     <span>{req.request_type}</span>
@@ -60,12 +68,17 @@ export default function MyRequests({ requests }) {
                                 {(req.verified_items?.length ?? 0) > 0 && (
                                     <div className="mt-2 text-sm text-gray-600">
                                         <p>
-                                            <span className="font-medium">Verified items:</span>
+                                            <span className="font-medium">
+                                                {req.request_type === "single" ? "Issued (break pieces):" : "Verified items:"}
+                                            </span>
                                         </p>
                                         <ul className="list-disc pl-5 mt-1">
                                             {req.verified_items.map((item) => (
-                                                <li key={item.barcode}>
-                                                    {item.product_name} (barcode {item.barcode})
+                                                <li key={`${item.barcode}-${item.product_name}`}>
+                                                    {item.product_name}{" "}
+                                                    {item.issued_quantity != null
+                                                        ? `— ${item.issued_quantity} piece(s)`
+                                                        : `(barcode ${item.barcode})`}
                                                 </li>
                                             ))}
                                         </ul>

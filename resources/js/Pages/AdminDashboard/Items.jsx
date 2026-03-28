@@ -1,182 +1,180 @@
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
-import { useState } from "react"
-import { useForm } from "@inertiajs/react"
+import { useMemo, useState } from "react"
 import { router } from '@inertiajs/react'
 
-export default function({items}){
+function barcodeSlotActive(item, index) {
+    if (Array.isArray(item.statuses) && item.statuses[index] !== undefined) {
+        return item.statuses[index] !== "inactive"
+    }
+    return item.status === "active"
+}
+
+export default function ItemsPage({ items }) {
     const [showAllItem, showAllItemState] = useState(true)
     const [showLowItem, showLowItemState] = useState(false)
-    const [showEditQty, showEditQtyState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)
-    const [showBreakConfirmation, showBreakConfirmationState] = useState(false)
-    const {put, data, setData} = useForm({
-        id: '',
-        break: '',
-        quantity_piece: '',
-        quantity_pack: '',
-    })
-    const {data: data_negate_Qty, setData: setData_negate_Qty} = useForm({
-        quantity_piece: '',
-        quantity_pack: '',
-    })
+    const [pendingBreak, setPendingBreak] = useState(null)
 
-   function handleBreak(e) {
-    e.preventDefault();
-    const newQty = data.quantity_pack - data_negate_Qty.quantity_pack;
+    const catalogItems = useMemo(
+        () => items.filter((item) => item.status === "active" && item.break === "not_break"),
+        [items],
+    )
 
-    router.put(route('update_break_item', data.id), {
-        quantity_pack: newQty,
-        break: 'break',
-    }, {
-        onSuccess: () => {
-            showBreakConfirmationState(false);
-            showEditQtyState(false);
+    const visibleItems = useMemo(() => {
+        if (showAllItem) {
+            return catalogItems
         }
-    });
-}
-    return(
-        <div className="min-h-screen bg-cover bg-center flex flex-col"
-      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}
->
+        if (showLowItem) {
+            return catalogItems.filter((item) => item.quantity_pack <= 30)
+        }
+        if (showHighItem) {
+            return catalogItems.filter((item) => item.quantity_pack >= 30)
+        }
+        return catalogItems
+    }, [catalogItems, showAllItem, showLowItem, showHighItem])
+
+    function confirmBreak() {
+        if (!pendingBreak) {
+            return
+        }
+        router.post(
+            route("split_barcode_break", pendingBreak.id),
+            { barcode: pendingBreak.barcode },
+            {
+                preserveScroll: true,
+                onFinish: () => setPendingBreak(null),
+            },
+        )
+    }
+
+    return (
+        <div
+            className="min-h-screen bg-cover bg-center flex flex-col"
+            style={{
+                backgroundImage:
+                    "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')",
+            }}
+        >
             <Layout>
                 <SidebarLayout>
-        <div className="text-white text-2xl font-bold mb-4">
-            <div className="flex justify-center">
-                <button onClick={()=>{showAllItemState(true); showHighItemState(false); showLowItemState(false)}} type="button" className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                    All Item
-                </button>
+                    <div className="text-white text-2xl font-bold mb-4">
+                        <div className="flex justify-center">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    showAllItemState(true)
+                                    showHighItemState(false)
+                                    showLowItemState(false)
+                                }}
+                                className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                All Item
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    showLowItemState(true)
+                                    showAllItemState(false)
+                                    showHighItemState(false)
+                                }}
+                                className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                Low Stock
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    showHighItemState(true)
+                                    showAllItemState(false)
+                                    showLowItemState(false)
+                                }}
+                                className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                High Stock
+                            </button>
+                        </div>
 
-                <button onClick={()=>{showLowItemState(true); showAllItemState(false); showHighItemState(false)}} type="button" className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                    Low Stock
-                </button>
-                <button onClick={()=>{showHighItemState(true); showAllItemState(false); showLowItemState(false)}} type="button" className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                    High Stock
-                </button>
-            </div>
-
-            <div>
-                {showAllItem && items.filter(item => item.status === "active" && item.break === 'not_break').map(item =>(
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
-                        <div
-                        key={item.id}
-                        className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
-                        >
                         <div>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Product Name:</span> {item.product_name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Barcode:</span> {item.barcode}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity / Pack:</span> {item.quantity_pack}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity / Piece:</span> {item.quantity_piece}
-                            </p>
-                        </div>
-
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity_pack: item.quantity_pack})}} className="bg-red-400 p-4 rounded-3xl">
-                            Break
-                        </button>
-                        </div>
-                </div>
-                ))}
-
-                {showLowItem && items.filter(item => item.quantity_pack <= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
-                        <div
-                        key={item.id}
-                        className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
-                        >
-                        <div>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Product Name:</span> {item.product_name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Barcode:</span> {item.barcode}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity / Pack:</span> {item.quantity_pack}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity / Piece:</span> {item.quantity_piece}
-                            </p>
-                        </div>
-
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity_pack: item.quantity_pack})}} className="bg-red-400 p-4 rounded-3xl">
-                            Break
-                        </button>
-                        </div>
-                </div>
-                ))}
-
-                {showHighItem && items.filter(item => item.quantity_pack >= 30 && item.status === "active" && item.break === 'not_break').map(item =>(
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
-                        <div
-                        key={item.id}
-                        className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
-                        >
-                        <div>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Product Name:</span> {item.product_name}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Barcode:</span> {item.barcode}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity / Pack:</span> {item.quantity_pack}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                            <span className="font-medium">Quantity / Piece:</span> {item.quantity_piece}
-                            </p>
-                        </div>
-
-                        <button type="button" onClick={()=>{showBreakConfirmationState(true);setData({id: item.id, break: 'break', quantity_pack: item.quantity_pack})}} className="bg-red-400 p-4 rounded-3xl">
-                            Break
-                        </button>
-                        </div>
-                </div>
-                ))}
-            </div>
-           
-            {/* Break Modal */}
-            <div className="flex fixed rounded-3xl bg-slate-500 w-80 justify-center items-center">
-                {showBreakConfirmation && (
-                    <div className="fixed inset-0 flex justify-center items-center bg-black/50">
-                        <div className="bg-slate-500 w-auto rounded-3xl p-6">
-                             Are you sure you want to Break this ITEM?
-                             <div className="flex-row flex justify-center mt-4 mr-4 ml-4 gap-10">
-                                <div>
-                                    <button type="button" onClick={() => showBreakConfirmationState(false)} className="bg-green-400 hover:bg-green-600 rounded-3xl p-4">No</button>
-                                </div>
-                                <div>
-                                    <button type="button" onClick={() => {showBreakConfirmationState(false); showEditQtyState(true);}} className="bg-red-400 hover:bg-red-600 rounded-3xl p-4">Yes</button>
-                                </div>
-                             </div>
+                            {visibleItems.flatMap((item) => {
+                                const codes = Array.isArray(item.barcode)
+                                    ? item.barcode.filter((c) => c != null && String(c).trim() !== "")
+                                    : []
+                                return codes.flatMap((code, idx) => {
+                                    if (!barcodeSlotActive(item, idx)) {
+                                        return []
+                                    }
+                                    return (
+                                    <div
+                                        key={`${item.id}-${code}`}
+                                        className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
+                                    >
+                                        <div className="border flex justify-between items-center border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2">
+                                            <div>
+                                                <p className="text-sm text-gray-600">
+                                                    <span className="font-medium">Product Name:</span>{" "}
+                                                    {item.product_name}
+                                                </p>
+                                                <p className="text-sm text-gray-600">
+                                                    <span className="font-medium">Barcode:</span>{" "}
+                                                    <code className="text-xs bg-gray-100 px-1 rounded">{code}</code>
+                                                </p>
+                                                <p className="text-sm text-gray-600">
+                                                    <span className="font-medium">Quantity / Pack:</span>{" "}
+                                                    {item.quantity_pack}
+                                                </p>
+                                                <p className="text-sm text-gray-600">
+                                                    <span className="font-medium">Quantity / Piece:</span>{" "}
+                                                    {item.quantity_piece}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setPendingBreak({ id: item.id, barcode: code })
+                                                }
+                                                className="bg-red-400 p-4 rounded-3xl"
+                                            >
+                                                Break
+                                            </button>
+                                        </div>
+                                    </div>
+                                    )
+                                })
+                            })}
                         </div>
                     </div>
-            )}
-        </div>
 
-            <div className="flex fixed rounded-3xl bg-slate-500 w-80 justify-center items-center">
-                {showEditQty && (
-                    <div className="fixed inset-0 flex justify-center items-center bg-black/50">
-                        <div className="bg-slate-500 w-auto rounded-3xl p-6">
-                            Set Quantity for Break Item
-
-                            <div>Current Quantity of Item: {data.quantity_pack}</div>
-
-                            <form onSubmit={handleBreak}>
-                                <input type="number" className="rounded-full text-black m-4 p-2" placeholder="Enter Quantity" value={data_negate_Qty.quantity_pack} onChange={(e) => setData_negate_Qty('quantity_pack', e.target.value)} />
-                                <button type="submit" className="bg-blue-400 hover:bg-blue-600 rounded-3xl p-4">Submit</button>
-                            </form>
+                    {pendingBreak && (
+                        <div className="fixed inset-0 flex justify-center items-center bg-black/50 z-50">
+                            <div className="bg-slate-600 text-white w-auto rounded-3xl p-6 max-w-md">
+                                <p className="mb-4">
+                                    Move barcode{" "}
+                                    <code className="bg-slate-800 px-1 rounded">{pendingBreak.barcode}</code>{" "}
+                                    to break items?{" "}
+                                    {visibleItems.find((i) => i.id === pendingBreak.id)?.barcode?.length === 1
+                                        ? "The whole product row will move to Break Items."
+                                        : "This barcode will be split into its own break line."}
+                                </p>
+                                <div className="flex justify-center gap-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPendingBreak(null)}
+                                        className="bg-green-500 hover:bg-green-600 rounded-3xl px-6 py-3"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={confirmBreak}
+                                        className="bg-red-500 hover:bg-red-600 rounded-3xl px-6 py-3"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    )}
                 </SidebarLayout>
             </Layout>
         </div>

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('barcode')->unique();
+            $table->json('barcode')->unique();
             $table->string('product_name');
             $table->integer('quantity_pack')->default(0);
             $table->integer('quantity_piece')->default(0);

@@ -8,6 +8,7 @@ use App\Models\RequestAudit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
@@ -36,55 +37,167 @@ class ItemController extends Controller
 
     public function scan(Request $request)
     {
-        
-    $item = Item::where('barcode', $request->barcode)->first();
+        $item = Item::whereBarcodeContains($request->barcode)->first();
 
-    if(!$item){
-        return back()->with('error', 'Product not found');
+        if (! $item) {
+            return back()->with('error', 'Product not found');
+        }
+
+        return back()->with('success', $item);
     }
 
-    return back()->with('success', $item);
+    public function searchPage($barcodes = null)
+    {
+        if (! $barcodes) {
+            return inertia('AdminDashboard/Search');
+        }
+
+        if (is_string($barcodes)) {
+            $barcodes = explode(',', $barcodes);
+        }
+
+        $barcodes = array_values(array_filter(array_map('trim', $barcodes), fn ($b) => $b !== ''));
+
+        if (count($barcodes) === 0) {
+            return inertia('AdminDashboard/Search');
+        }
+
+        $items = Item::query()
+            ->where(function ($q) use ($barcodes) {
+                foreach ($barcodes as $b) {
+                    $q->orWhereJsonContains('barcode', $b);
+                }
+            })
+            ->get()
+            ->unique('id')
+            ->values();
+
+        if ($items->isEmpty()) {
+            return inertia('AdminDashboard/Search', [
+                'error' => 'Product not found',
+            ]);
+        }
+
+        return inertia('AdminDashboard/Search', ['items' => $items]);
     }
-
-  public function searchPage($barcode = null)
-  {
-      if (!$barcode) {
-          return inertia('AdminDashboard/Search');
-      }
-
-      $item = Item::where('barcode', $barcode)->first();
-
-      if (!$item) {
-          return inertia('AdminDashboard/Search', [
-              'error' => 'Product not found',
-          ]);
-      }
-
-      return inertia('AdminDashboard/Search', ['item' => $item]);
-  }
     public function create_item(Request $request){
         $items = $request->validate([
-            'barcode' => 'required',
+            'barcode' => 'required|array',
             'product_name' => 'required',
-            'quantity_pack' => 'required',
-            'quantity_piece' => 'required',
+            'quantity_piece' => 'required|integer|min:0',
             'status' => 'required',
             'break' => 'required',
-
         ]);
+
+        $barcodes = array_values(array_filter(
+            $items['barcode'],
+            fn ($b) => $b !== null && trim((string) $b) !== ''
+        ));
+
+        if (count($barcodes) === 0) {
+            return back()->withErrors(['barcode' => 'Add at least one barcode.']);
+        }
+
+        $items['barcode'] = $barcodes;
+        $items['quantity_pack'] = count($barcodes);
+
+        Item::assertUniqueBarcodes($barcodes);
 
         Item::create($items);
         return redirect()->route('admin_page');
     }
 
-    public function update_status($barcode){
-        $item = Item::where('barcode', $barcode)->first();
+    /**
+     * Move one barcode to break inventory: either split off from a multi-barcode item
+     * or convert a single-barcode row into a break item (all packs become distributable pieces).
+     */
+    public function splitBarcodeBreak(Request $request, $id)
+    {
+        $request->validate([
+            'barcode' => 'required|string',
+        ]);
 
-        if(!$item){
+        $item = Item::findOrFail($id);
+
+        if ($item->computeAggregateStatus() !== 'active' || $item->break !== 'not_break') {
+            return back()->withErrors(['barcode' => 'This item cannot be broken.']);
+        }
+
+        $codes = array_values(array_filter(
+            $item->barcode ?? [],
+            fn ($c) => $c !== null && trim((string) $c) !== ''
+        ));
+
+        if (! in_array($request->barcode, $codes, true)) {
+            return back()->withErrors(['barcode' => 'That barcode is not part of this item.']);
+        }
+
+        if (count($codes) === 1) {
+            DB::transaction(function () use ($item) {
+                $pieces = max(0, $item->quantity_pack * $item->quantity_piece);
+                $item->ensureStatusesAligned();
+                $slot = (is_array($item->statuses) && isset($item->statuses[0]))
+                    ? $item->statuses[0]
+                    : (($item->status === 'inactive') ? 'inactive' : 'active');
+                $item->break = 'break';
+                $item->quantity_pack = $pieces;
+                if (is_array($item->barcode) && count($item->barcode) === 1) {
+                    $item->statuses = [$slot === 'inactive' ? 'inactive' : 'active'];
+                }
+                $item->save();
+            });
+
+            return back()->with('success', 'Item moved to break items. Distribute pieces from the Break Items page.');
+        }
+
+        Item::assertUniqueBarcodes([$request->barcode], $item->id);
+
+        DB::transaction(function () use ($request, $item, $codes) {
+            $oldCodes = $codes;
+            $oldStatuses = $item->statuses ?? [];
+            if (count($oldStatuses) !== count($oldCodes)) {
+                $slot = ($item->status === 'inactive') ? 'inactive' : 'active';
+                $oldStatuses = array_fill(0, count($oldCodes), $slot);
+            }
+
+            $remaining = array_values(array_filter(
+                $oldCodes,
+                fn ($c) => $c !== $request->barcode
+            ));
+
+            $newStatuses = [];
+            foreach ($remaining as $c) {
+                $idx = array_search($c, $oldCodes, true);
+                $newStatuses[] = ($idx !== false && isset($oldStatuses[$idx])) ? $oldStatuses[$idx] : 'active';
+            }
+
+            $item->barcode = $remaining;
+            $item->statuses = $newStatuses;
+            $item->quantity_pack = max(0, $item->quantity_pack - 1);
+            $item->save();
+
+            Item::create([
+                'barcode' => [$request->barcode],
+                'statuses' => ['active'],
+                'product_name' => $item->product_name,
+                'quantity_pack' => max(0, $item->quantity_piece),
+                'quantity_piece' => $item->quantity_piece,
+                'status' => 'active',
+                'break' => 'break',
+            ]);
+        });
+
+        return back()->with('success', 'This barcode was moved to break items.');
+    }
+
+    public function update_status($barcode){
+        $item = Item::whereBarcodeContains($barcode)->first();
+
+        if(! $item){
             return back()->with('error', 'Product not found');
         }
 
-        $item->status = 'inactive';
+        $item->setBarcodeStatus($barcode, 'inactive');
         $item->save();
 
         return back()->with('success', 'Product status updated to inactive');
@@ -98,24 +211,26 @@ class ItemController extends Controller
 
     public function employeePage(){
         $users = Auth::user();
-        return inertia('Employee/Index', ['users' => $users]);
+
+        return inertia('Employee/Index', [
+            'users' => $users,
+        ]);
     }
 
     public function submitRequest(Request $request){
         $request->validate([
             'message' => 'required|array',
-            'request_type' => 'required',
-            'request_quantity' => 'required|array'
+            'request_type' => 'required|in:single,multiple',
+            'request_quantity' => 'required|array',
         ]);
 
-        $req = \App\Models\Request::create([
+        $req = ItemRequest::create([
             'user_id' => $request->user()->id,
             'message' => $request->message,
             'request_type' => $request->request_type,
             'request_quantity' => $request->request_quantity,
         ]);
 
-        // Notify admins
         $admins = \App\Models\User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new \App\Notifications\NewRequestNotification($req));
@@ -130,7 +245,64 @@ class ItemController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return inertia('AdminDashboard/Requests', ['requests' => $requests]);
+        return inertia('AdminDashboard/Requests', [
+            'requests' => $requests,
+            'breakItems' => $this->adminBreakStockItems(),
+        ]);
+    }
+
+    /**
+     * Active break rows with pieces left (for admin to allocate on single requests).
+     */
+    protected function adminBreakStockItems()
+    {
+        return Item::query()
+            ->where('break', 'break')
+            ->where('status', 'active')
+            ->where('quantity_pack', '>', 0)
+            ->orderBy('product_name')
+            ->get();
+    }
+
+    public function saveBreakAllocation($id, Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required|exists:items,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $req = ItemRequest::findOrFail($id);
+
+        if ($req->request_type !== 'single') {
+            return back()->withErrors(['allocation' => 'Only single requests use break allocations.']);
+        }
+
+        if (! in_array($req->status, ['pending', 'approved'], true)) {
+            return back()->withErrors(['allocation' => 'Allocation can only be saved while the request is pending or approved.']);
+        }
+
+        $item = Item::findOrFail($request->integer('item_id'));
+        if ($item->break !== 'break' || $item->computeAggregateStatus() !== 'active') {
+            return back()->withErrors(['allocation' => 'Choose an active break item.']);
+        }
+
+        $qty = $request->integer('quantity');
+        if ($qty > $item->quantity_pack) {
+            return back()->withErrors(['allocation' => 'Not enough pieces available for this break item.']);
+        }
+
+        $codes = $item->barcode ?? [];
+        $barcodeLabel = is_array($codes) && count($codes) > 0 ? (string) $codes[0] : '';
+
+        $req->admin_break_allocations = [[
+            'item_id' => $item->id,
+            'quantity' => $qty,
+            'product_name' => $item->product_name,
+            'barcode' => $barcodeLabel,
+        ]];
+        $req->save();
+
+        return back()->with('success', 'Break item allocation saved.');
     }
 
     public function verifyRequestItem($id, Request $request){
@@ -144,22 +316,34 @@ class ItemController extends Controller
             return back()->withErrors(['barcode' => 'Only pending requests can be verified.']);
         }
 
-        $item = Item::where('barcode', $request->barcode)->first();
+        if ($req->request_type === 'single') {
+            return back()->withErrors([
+                'barcode' => 'Single requests are fulfilled from break inventory. Use Approve or Reject without scanning.',
+            ]);
+        }
+
+        $item = Item::whereBarcodeContains($request->barcode)->first();
 
         if (! $item) {
             return back()->withErrors(['barcode' => 'Product not found for this barcode.']);
         }
 
-        if ($item->status !== 'active') {
+        if ($item->break === 'break') {
+            return back()->withErrors([
+                'barcode' => 'This is a break item. It cannot be added to a multiple request.',
+            ]);
+        }
+
+        if (! $item->barcodeIsActive($request->barcode)) {
             return back()->withErrors(['barcode' => 'This item is not available (not active in inventory).']);
         }
 
         $barcodes = $req->item_barcodes ?? [];
-        if (in_array($item->barcode, $barcodes, true)) {
+        if (in_array($request->barcode, $barcodes, true)) {
             return back()->withErrors(['barcode' => 'This item has already been added to this request.']);
         }
 
-        $barcodes[] = $item->barcode;
+        $barcodes[] = $request->barcode;
         $req->item_barcodes = array_values($barcodes);
         $req->save();
 
@@ -170,7 +354,7 @@ class ItemController extends Controller
             'from_status' => $req->status,
             'to_status' => $req->status,
             'metadata' => [
-                'barcode' => $item->barcode,
+                'barcode' => $request->barcode,
                 'product_name' => $item->product_name,
             ],
         ]);
@@ -191,21 +375,57 @@ class ItemController extends Controller
         }
 
         if ($request->status === 'approved') {
-            $barcodes = $req->item_barcodes ?? [];
-            if (count($barcodes) === 0) {
-                return back()->withErrors(['status' => 'Scan and verify at least one available item before approving.']);
+            if ($req->request_type === 'multiple') {
+                $barcodes = $req->item_barcodes ?? [];
+                if (count($barcodes) === 0) {
+                    return back()->withErrors(['status' => 'Scan and verify at least one available item before approving.']);
+                }
+
+                foreach ($barcodes as $b) {
+                    $inv = Item::whereBarcodeContains($b)->first();
+                    if (! $inv || ! $inv->barcodeIsActive($b)) {
+                        return back()->withErrors(['status' => 'One or more verified items are no longer active/available.']);
+                    }
+                }
+
+                foreach ($barcodes as $b) {
+                    $inv = Item::whereBarcodeContains($b)->first();
+                    if ($inv) {
+                        $inv->setBarcodeStatus($b, 'inactive');
+                        $inv->save();
+                    }
+                }
+            } elseif ($req->request_type === 'single') {
+                $alloc = $req->admin_break_allocations ?? [];
+                if (! is_array($alloc) || count($alloc) === 0) {
+                    return back()->withErrors(['status' => 'Save a break item and piece count before approving.']);
+                }
+
+                DB::beginTransaction();
+                try {
+                    foreach ($alloc as $line) {
+                        $item = Item::lockForUpdate()->findOrFail($line['item_id']);
+                        if ($item->break !== 'break' || $item->computeAggregateStatus() !== 'active') {
+                            DB::rollBack();
+
+                            return back()->withErrors(['status' => 'The allocated break item is no longer available.']);
+                        }
+                        $qty = (int) ($line['quantity'] ?? 0);
+                        if ($qty < 1 || $qty > $item->quantity_pack) {
+                            DB::rollBack();
+
+                            return back()->withErrors(['status' => 'Not enough break stock to approve this request.']);
+                        }
+                        $item->quantity_pack -= $qty;
+                        $item->save();
+                    }
+                    DB::commit();
+                } catch (\Throwable $e) {
+                    DB::rollBack();
+                    throw $e;
+                }
             }
 
-            $matchingItems = Item::query()
-                ->whereIn('barcode', $barcodes)
-                ->where('status', 'active')
-                ->count();
-
-            if ($matchingItems !== count($barcodes)) {
-                return back()->withErrors(['status' => 'One or more verified items are no longer active/available.']);
-            }
-
-            Item::whereIn('barcode', $barcodes)->update(['status' => 'inactive']);
             $req->approved_at = now();
             $req->rejected_at = null;
         } else {
@@ -246,6 +466,14 @@ class ItemController extends Controller
         }
 
         $fromStatus = $req->status;
+
+        if ($req->request_type === 'single') {
+            $alloc = $req->admin_break_allocations ?? [];
+            if (! is_array($alloc) || count($alloc) === 0) {
+                return back()->withErrors(['status' => 'Choose a break item and quantity before marking issued.']);
+            }
+        }
+
         $req->status = 'issued';
         $req->issued_at = now();
         $req->save();
@@ -258,6 +486,7 @@ class ItemController extends Controller
             'to_status' => 'issued',
             'metadata' => [
                 'verified_barcodes' => $req->item_barcodes ?? [],
+                'admin_break_allocations' => $req->admin_break_allocations ?? [],
             ],
         ]);
 
@@ -271,10 +500,25 @@ class ItemController extends Controller
             return back()->withErrors(['status' => 'Only approved requests can have their issuance cancelled.']);
         }
 
-        // Set items back to active
         $barcodes = $req->item_barcodes ?? [];
-        if (count($barcodes) > 0) {
-            Item::whereIn('barcode', $barcodes)->update(['status' => 'active']);
+
+        if ($req->request_type === 'single') {
+            $alloc = $req->admin_break_allocations ?? [];
+            foreach ($alloc as $line) {
+                $item = Item::find($line['item_id'] ?? null);
+                if ($item) {
+                    $item->quantity_pack += (int) ($line['quantity'] ?? 0);
+                    $item->save();
+                }
+            }
+        } else {
+            foreach ($barcodes as $b) {
+                $inv = Item::whereBarcodeContains($b)->first();
+                if ($inv) {
+                    $inv->setBarcodeStatus($b, 'active');
+                    $inv->save();
+                }
+            }
         }
 
         $fromStatus = $req->status;
@@ -410,6 +654,7 @@ class ItemController extends Controller
             'requests' => $requests,
             'filter' => $filter,
             'search' => $search,
+            'breakItems' => $this->adminBreakStockItems(),
         ]);
     }
 
@@ -430,6 +675,10 @@ class ItemController extends Controller
 
         if ($req->status !== 'pending') {
             return back()->withErrors(['barcode' => 'Only pending requests can be modified.']);
+        }
+
+        if ($req->request_type === 'single') {
+            return back()->withErrors(['barcode' => 'Single (break) requests are not modified by removing scanned items.']);
         }
 
         $barcodes = $req->item_barcodes ?? [];
@@ -461,13 +710,17 @@ class ItemController extends Controller
     public function updateBreakItem(Request $request, $id){
         $item = Item::findOrFail($id);
 
+        if ($item->break !== 'break') {
+            return back()->withErrors(['quantity_pack' => 'Only break items can be updated here.']);
+        }
+
         $request->validate([
             'quantity_pack' => 'required|integer|min:0',
         ]);
 
-        $item->quantity_pack = $request->quantity_pack;
+        $item->quantity_pack = $request->integer('quantity_pack');
         $item->save();
 
-        return back()->with('success', 'Item break status updated.');
+        return back()->with('success', 'Quantity updated.');
     }
 }

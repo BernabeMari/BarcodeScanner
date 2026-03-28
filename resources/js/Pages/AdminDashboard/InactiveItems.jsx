@@ -1,5 +1,6 @@
 import Layout from "../../Layouts/Layout";
 import SidebarLayout from "../../Layouts/sidebarLayout";
+import { formatBarcodes } from "@/utils/formatBarcodes";
 
 export default function({items}){
     return(
@@ -18,7 +19,7 @@ export default function({items}){
                                 <br />
                                 Quantity / Piece: {item.quantity_piece}
                                 <br />
-                                Barcode: {item.barcode}
+                                Barcode: {formatBarcodes(item.barcode)}
                             </div>
                         )}
                         </div>
