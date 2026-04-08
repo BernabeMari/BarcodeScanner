@@ -52,7 +52,7 @@ class UserController extends Controller
     }
 
     public function updateProfile(Request $request){
-        $find = User::findOrFail(Auth::id());        
+        $find = User::findOrFail(Auth::user()->id);     
         $find->update([
             'profile_picture' => $request->file('profile_picture')->store('profile_picture', 'public')
         ]);

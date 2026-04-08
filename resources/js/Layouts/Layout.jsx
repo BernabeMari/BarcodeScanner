@@ -1,8 +1,13 @@
+import { usePage } from "@inertiajs/react";
+
 export default function Layout({ children }) {
+  const { auth } = usePage().props;
+  console.log(auth.user.id)
   return (
     <div className="min-h-screen flex flex-col">
     {/* Header */}
-    <header className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] fixed top-0 left-0 w-full text-white h-20 font-bold p-4 z-50 flex items-center">
+    <header className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] fixed top-0 left-0 w-full text-white h-20 font-bold p-4 z-50 flex items-center justify-between">
+      <div className="flex items-center">
         <img 
           src="/images/tcu-logo.jpg" 
           alt="TCU Logo" 
@@ -10,10 +15,21 @@ export default function Layout({ children }) {
         />
         <div className="ml-4 flex flex-col">
           <h1 className="text-2xl italic">Taguig City University</h1>
-            <p className="text-sm font-normal italic">
-              Transforming Excellence into Purpose
-            </p>
+          <p className="text-sm font-normal italic">
+            Transforming Excellence into Purpose
+          </p>
         </div>
+      </div>
+
+      <div className="ml-auto">
+       
+          <img
+            src={`/storage/${auth.user.profile_picture}`}
+            alt="Profile"
+            className="w-12 h-12 rounded-full"
+          />
+       
+      </div>
     </header>
 
     {/* Main content */}
