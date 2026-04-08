@@ -1,5 +1,5 @@
 import { router, useForm } from "@inertiajs/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
 
@@ -10,9 +10,13 @@ export default function Index() {
     quantity_pack: 0,
     quantity_piece: 0,
     status: 'active',
-    break: 'not_break'
+    break: 'not_break',
+    item_type: '',
+    item_type_custom: '',
   })
-
+  const itemType = itemData.item_type === "Other" ?
+  itemData.item_type_custom : itemData.item_type
+  
   useEffect(() => {
     const n = itemData.barcode.filter((x) => String(x).trim() !== "").length
     setItemData("quantity_pack", n)
@@ -20,7 +24,10 @@ export default function Index() {
 
   function submit_item(e) {
     e.preventDefault()
-    post(route('create_item'), {
+    post(route('create_item'),{
+        ...itemData,
+        item_type: itemType 
+    }, {
       onSuccess: () => router.visit(route('admin_page')),
     })
   }
@@ -52,7 +59,8 @@ export default function Index() {
     next[index] = value
     setItemData("barcode", next)
   }
-
+  const [showMultipleModal, showMultipleModalset] = useState(false)
+  const [showSingleModal, showSingleModalset] = useState(true)
   return (
     <div className="min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}>
@@ -61,8 +69,17 @@ export default function Index() {
         <SidebarLayout>
 
           <div>
+            <button type="button" onClick={(e) => {showSingleModalset(true); showMultipleModalset(false)}}>Single</button>
+            <button type="button" onClick={(e) => {showMultipleModalset(true); showSingleModalset(false)}}>Multiple</button>
             <div className="flex justify-center items-center">
-              <form onSubmit={submit_item} className="flex flex-col m-5 text-white max-w-lg w-full">
+                {showSingleModal && (
+                  <form onSubmit={submit_item} className="flex flex-col m-5 text-white max-w-lg w-full">
+                    <p className="font-medium">Barcodes (quantity / piece = number of barcodes)</p>
+                  </form>
+                )}
+                
+                {showMultipleModal && (
+                  <form onSubmit={submit_item} className="flex flex-col m-5 text-white max-w-lg w-full">
                 <p className="font-medium">Barcodes (quantity / pack = number of barcodes)</p>
                 {itemData.barcode.map((row, index) => (
                   <div key={index} className="flex flex-row gap-2 my-1">
@@ -84,12 +101,33 @@ export default function Index() {
                 <p className="mt-4">Enter Item&apos;s Name</p>
                 <input type="text" value={itemData.product_name} onChange={(e) => setItemData('product_name', e.target.value)} placeholder="Enter Name" className="border p-2 text-black" />
                 <p className="mt-3">Enter Number of piece/s per pack</p>
+                
+                <select value={itemData.item_type} onChange={(e) => setItemData('item_type', e.target.value)} className="border p-2 mt-3 text-black">
+                  <option value="" disabled>Select Options</option>
+                  <option value="Bottle">Bottle</option>
+                  <option value="Box">Box</option>
+                  <option value="Pcs">Pcs</option>
+                  <option value="Ream">Ream</option>
+                  <option value="Unit">Unit</option>
+                  <option value="Other">Others...</option>
+                  </select>
+                  {itemData.item_type === "Other" && (
+                  <input
+                    type="text"
+                    placeholder="Please specify"
+                    className="border p-2 mt-2 text-black"
+                    value={itemData.item_type_custom}
+                    onChange={(e) => setItemData('item_type_custom', e.target.value)}
+                  />
+                )}
+                
                 <input type="number" value={itemData.quantity_piece} onChange={(e) => setItemData('quantity_piece', e.target.value)} placeholder="Pieces per pack" className="border p-2 text-black" min={0} />
                 <select readOnly value={itemData.status} onChange={(e) => setItemData('status', e.target.value)} className="border p-2 mt-3 text-black">
                   <option value="active">Active</option>
                 </select>
                 <button type="submit" className="mt-4 bg-green-600 hover:bg-green-700 py-2 rounded">Create</button>
               </form>
+                )}
             </div>
           </div>
         </SidebarLayout>

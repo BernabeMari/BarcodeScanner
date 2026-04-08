@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->json('barcode')->unique();
             $table->string('product_name');
+            $table->string('item_type');
             $table->integer('quantity_pack')->default(0);
             $table->integer('quantity_piece')->default(0);
             $table->enum('status', ['active', 'inactive'])->default('active');

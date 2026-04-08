@@ -86,31 +86,37 @@ class ItemController extends Controller
         return inertia('AdminDashboard/Search', ['items' => $items]);
     }
     public function create_item(Request $request){
-        $items = $request->validate([
-            'barcode' => 'required|array',
-            'product_name' => 'required',
-            'quantity_piece' => 'required|integer|min:0',
-            'status' => 'required',
-            'break' => 'required',
-        ]);
+    $items = $request->validate([
+        'barcode' => 'required|array',
+        'product_name' => 'required',
+        'quantity_piece' => 'required|integer|min:0',
+        'status' => 'required',
+        'break' => 'required',
+        'item_type' => 'required',
+    ]);
 
-        $barcodes = array_values(array_filter(
-            $items['barcode'],
-            fn ($b) => $b !== null && trim((string) $b) !== ''
-        ));
-
-        if (count($barcodes) === 0) {
-            return back()->withErrors(['barcode' => 'Add at least one barcode.']);
-        }
-
-        $items['barcode'] = $barcodes;
-        $items['quantity_pack'] = count($barcodes);
-
-        Item::assertUniqueBarcodes($barcodes);
-
-        Item::create($items);
-        return redirect()->route('admin_page');
+    // Normalize item_type if "Other"
+    if ($items['item_type'] === "Other") {
+        $items['item_type'] = $request->item_type_custom;
     }
+
+    $barcodes = array_values(array_filter(
+        $items['barcode'],
+        fn ($b) => $b !== null && trim((string) $b) !== ''
+    ));
+
+    if (count($barcodes) === 0) {
+        return back()->withErrors(['barcode' => 'Add at least one barcode.']);
+    }
+
+    $items['barcode'] = $barcodes;
+    $items['quantity_pack'] = count($barcodes);
+
+    Item::assertUniqueBarcodes($barcodes);
+
+    Item::create($items);
+    return redirect()->route('admin_page');
+}
 
     /**
      * Move one barcode to break inventory: either split off from a multi-barcode item

@@ -16,6 +16,7 @@ class Item extends Model
         'quantity_piece',
         'status',
         'break',
+        'item_type',
         'break_initial_pieces',
     ];
 
