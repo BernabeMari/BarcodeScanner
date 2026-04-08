@@ -34,10 +34,11 @@ Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->gr
     Route::put('/items/{id}/update', 'updateBreakItem')->name('update_break_item');
     Route::post('/items/{id}/unbreak', 'unbreakBreakItem')->name('unbreak_break_item');
     Route::post('/items/{id}/break-barcode', 'splitBarcodeBreak')->name('split_barcode_break');
-});
-
+    });
+    
 Route::middleware(['auth', 'role:employee'])->controller(ItemController::class)->group(function(){
     Route::get('/employee', 'employeePage')->name('employee_page');
+    Route::get('/edit-profile', 'employeeProfilePage')->name('employee_profile');
     Route::get('/employee/my-requests', 'employeeMyRequestsPage')->name('employee_my_requests');
     Route::post('/requests/{id}/cancel', 'cancelRequest')->name('cancel_request');
     Route::post('/submit-request', 'submitRequest')->name('submit_request');
@@ -45,8 +46,12 @@ Route::middleware(['auth', 'role:employee'])->controller(ItemController::class)-
     Route::get('/requests/{id}/receipt', 'generateReceipt')->name('generate_receipt');
 });
 
+Route::middleware(['auth', 'role:employee'])->controller(UserController::class)->group(function(){
+    });
+    
 Route::controller(UserController::class)->group(function(){
-    Route::post('/CreateUser', 'create_user')->name('create_user');
+    Route::post('/update-profile', 'updateProfile')->name('update_profile');
+    Route::post('/create-user', 'create_user')->name('create_user');
     Route::post('/login', 'login')->name('login');
     Route::get('/', 'login_page')->name('login_page');
 });

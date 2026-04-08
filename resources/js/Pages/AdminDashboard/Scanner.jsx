@@ -91,20 +91,6 @@ export default function Index() {
                 <button type="submit" className="mt-4 bg-green-600 hover:bg-green-700 py-2 rounded">Create</button>
               </form>
             </div>
-            <div className="px-5 pb-8 text-white">
-              <p className="text-sm mb-2">Scan to look up product (optional)</p>
-              <input
-                type="text"
-                className="border p-2 w-full max-w-lg text-black"
-                placeholder="Scan barcode"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleScan(e.target.value)
-                    e.target.value = ""
-                  }
-                }}
-              />
-            </div>
           </div>
         </SidebarLayout>
       </Layout>

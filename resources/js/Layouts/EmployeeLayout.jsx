@@ -20,6 +20,15 @@ export default function SidebarLayoutEmployee({ children }) {
         >
         My Requests
         </Link>
+
+        <Link href={route("employee_profile")} className={`p-2 inline-block rounded-xl m-2 border transition
+    ${route().current("employee_profile")
+      ? "bg-gradient-to-r from-[#ffffff] to-[#ff4b2b] text-black font-semibold border-white"
+      : "linear-gradient(to right, #ff416c, #ff4b2b) border-transparent hover:border-white"}`}
+        >
+        Profile
+        </Link>
+        
         <button
           type="button"
           onClick={() => router.post(route('logout'))}

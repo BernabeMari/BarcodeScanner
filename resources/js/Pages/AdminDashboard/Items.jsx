@@ -10,7 +10,7 @@ function barcodeSlotActive(item, index) {
     return item.status === "active"
 }
 
-export default function ItemsPage({ items }) {
+export default function ItemsPage({ items}) {
     const [showAllItem, showAllItemState] = useState(true)
     const [showLowItem, showLowItemState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)

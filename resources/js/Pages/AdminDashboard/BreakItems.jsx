@@ -36,7 +36,7 @@ export default function BreakItemsPage({ items }) {
                     {items.length === 0 ? (
                         <p className="text-gray-300">No break items yet.</p>
                     ) : (
-                        items.map((item) => (
+                        items.filter((item) => item.quantity_pack > 0).map((item) => (
                             <div
                                 key={item.id}
                                 className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"

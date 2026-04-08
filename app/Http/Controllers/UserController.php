@@ -18,6 +18,7 @@ class UserController extends Controller
             'password' => 'required',
             'role' => 'required',
             'department' => 'nullable|string',
+            'profile_picture' => 'nullable'
         ]);
 
         if ($create_user['role'] === 'admin') {
@@ -48,5 +49,14 @@ class UserController extends Controller
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
         ]);
+    }
+
+    public function updateProfile(Request $request){
+        $find = User::findOrFail(Auth::id());        
+        $find->update([
+            'profile_picture' => $request->file('profile_picture')->store('profile_picture', 'public')
+        ]);
+
+        return redirect()->back();
     }
 }

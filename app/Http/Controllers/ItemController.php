@@ -16,6 +16,11 @@ class ItemController extends Controller
         return inertia('AdminDashboard/Scanner');
     }
 
+    public function employeeProfilePage(){
+        return inertia('Employee/Profile');
+    }
+
+
     public function createUserPage(){
         $users = User::all();
         return inertia('AdminDashboard/CreateUser', ['users' => $users]);
@@ -77,7 +82,7 @@ class ItemController extends Controller
                 'error' => 'Product not found',
             ]);
         }
-
+        
         return inertia('AdminDashboard/Search', ['items' => $items]);
     }
     public function create_item(Request $request){
