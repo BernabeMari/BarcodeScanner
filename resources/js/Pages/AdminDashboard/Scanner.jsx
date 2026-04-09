@@ -4,6 +4,8 @@ import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
 
 export default function Index() {
+  const [showMultipleModal, showMultipleModalset] = useState(false)
+  const [showSingleModal, showSingleModalset] = useState(true)
   const { post, data: itemData, setData: setItemData, reset: resetItemForm } = useForm({
     barcode: [""],
     product_name: '',
@@ -25,11 +27,21 @@ export default function Index() {
   function submit_item(e) {
     e.preventDefault()
     post(route('create_item'),{
-        ...itemData,
-        item_type: itemType 
-    }, {
-      onSuccess: () => router.visit(route('admin_page')),
-    })
+    onSuccess: () => {
+      resetItemForm()
+      showMultipleModalset(true)
+      showSingleModalset(false)
+    }})
+  }
+
+  function submit_single_item(e) {
+    e.preventDefault()
+    post(route('create_single_item'),{
+    onSuccess: () => {
+      resetItemForm()
+      showMultipleModalset(true)
+      showSingleModalset(false)
+    }})
   }
 
   function addBarcodeRow() {
@@ -41,8 +53,6 @@ export default function Index() {
     next[index] = value
     setItemData("barcode", next)
   }
-  const [showMultipleModal, showMultipleModalset] = useState(false)
-  const [showSingleModal, showSingleModalset] = useState(true)
   return (
     <div className="min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}>
@@ -55,7 +65,7 @@ export default function Index() {
             <button type="button" onClick={(e) => {showMultipleModalset(true); showSingleModalset(false)}}>Multiple</button>
             <div className="flex justify-center items-center">
                 {showSingleModal && (
-                  <form onSubmit={submit_item} className="flex flex-col m-5 text-white max-w-lg w-full">
+                  <form onSubmit={submit_single_item} className="flex flex-col m-5 text-white max-w-lg w-full">
                     <p className="font-medium">Barcodes (quantity / piece = number of barcodes)</p>
                     {itemData.barcode.map((row, index) => (
                     <div key={index} className="flex flex-row gap-2 my-1">

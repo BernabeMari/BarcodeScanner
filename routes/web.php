@@ -21,6 +21,7 @@ Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->gr
     Route::post('/scan-product', 'scan');
     Route::get('/CreateUser', 'CreateUserPage')->name('create_user_page');
     Route::post('/create-product', 'create_item')->name('create_item');
+    Route::post('/create-single-item', 'create_single_item')->name('create_single_item');
     Route::get('/inactive-items', 'inactive_items_page')->name('inactive_items_page');
     Route::get('/requests', 'requestsPage')->name('requests_page');
     Route::get('/requests/done', 'requestsDonePage')->name('requests_done_page');
