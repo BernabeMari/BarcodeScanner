@@ -28,14 +28,6 @@ export default function SidebarLayoutEmployee({ children }) {
         >
         Profile
         </Link>
-        
-        <button
-          type="button"
-          onClick={() => router.post(route('logout'))}
-          className="linear-gradient(to right, #ff416c, #ff4b2b) p-2 inline-block rounded-xl m-2 border border-transparent hover:border-white transition text-left"
-        >
-          Logout
-        </button>
       </aside>
 
       {/* Main content */}

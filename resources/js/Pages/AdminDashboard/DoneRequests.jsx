@@ -9,32 +9,6 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
     const { url } = page
     const errors = page.props.errors
     const [searchTerm, setSearchTerm] = useState(search || "")
-    const [allocItemId, setAllocItemId] = useState({})
-    const [allocQty, setAllocQty] = useState({})
-
-    function currentAllocItemId(req) {
-        if (Object.prototype.hasOwnProperty.call(allocItemId, req.id)) {
-            return allocItemId[req.id]
-        }
-        const saved = req.admin_break_allocations?.[0]?.item_id
-        return saved != null ? String(saved) : ""
-    }
-
-    function currentAllocQty(req) {
-        if (Object.prototype.hasOwnProperty.call(allocQty, req.id)) {
-            return allocQty[req.id]
-        }
-        const q = req.admin_break_allocations?.[0]?.quantity
-        return q != null ? String(q) : ""
-    }
-
-    function saveBreakAllocationFor(req) {
-        router.post(
-            route("save_break_allocation", req.id),
-            { item_id: currentAllocItemId(req), quantity: currentAllocQty(req) },
-            { preserveScroll: true },
-        )
-    }
 
     useEffect(() => {
         setSearchTerm(search || "")
@@ -282,66 +256,6 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
                                         </div>
                                     )}
 
-                                    {req.status === "approved" && req.request_type === "single" && (
-                                        <div className="mt-4 space-y-3 border border-amber-200 rounded-lg p-3 bg-amber-50/80">
-                                            <p className="text-sm font-medium text-gray-900">
-                                                Break item (adjust before issuing)
-                                            </p>
-                                            {breakItems.length === 0 ? (
-                                                <p className="text-sm text-amber-800">No break items in stock.</p>
-                                            ) : (
-                                                <div className="flex flex-wrap gap-3 items-end">
-                                                    <div className="flex flex-col min-w-[220px]">
-                                                        <label className="text-xs font-medium text-gray-600 mb-1">
-                                                            Break item
-                                                        </label>
-                                                        <select
-                                                            className="border rounded px-3 py-2 text-sm"
-                                                            value={currentAllocItemId(req)}
-                                                            onChange={(e) =>
-                                                                setAllocItemId((p) => ({
-                                                                    ...p,
-                                                                    [req.id]: e.target.value,
-                                                                }))
-                                                            }
-                                                        >
-                                                            <option value="">Select…</option>
-                                                            {breakItems.map((item) => (
-                                                                <option key={item.id} value={String(item.id)}>
-                                                                    {item.product_name} ({formatBarcodes(item.barcode)}) —{" "}
-                                                                    {item.quantity_pack} pcs
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="flex flex-col w-28">
-                                                        <label className="text-xs font-medium text-gray-600 mb-1">
-                                                            Pieces
-                                                        </label>
-                                                        <input
-                                                            type="number"
-                                                            min={1}
-                                                            className="border rounded px-3 py-2 text-sm"
-                                                            value={currentAllocQty(req)}
-                                                            onChange={(e) =>
-                                                                setAllocQty((p) => ({
-                                                                    ...p,
-                                                                    [req.id]: e.target.value,
-                                                                }))
-                                                            }
-                                                        />
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => saveBreakAllocationFor(req)}
-                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm"
-                                                    >
-                                                        Save allocation
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
 
                                     {req.status === "approved" && (
                                         <div className="mt-4 flex flex-col gap-2">

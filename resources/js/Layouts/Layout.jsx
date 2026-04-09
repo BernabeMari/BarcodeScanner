@@ -1,8 +1,9 @@
-import { usePage } from "@inertiajs/react";
-
+import { usePage, router } from "@inertiajs/react";
+import { useState } from "react";
 export default function Layout({ children }) {
   const { auth } = usePage().props;
   console.log(auth.user.id)
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   return (
     <div className="min-h-screen flex flex-col">
     {/* Header */}
@@ -21,15 +22,26 @@ export default function Layout({ children }) {
         </div>
       </div>
 
-      <div className="ml-auto">
-       
+      <div className="ml-auto relative">
           <img
             src={`/storage/${auth.user.profile_picture}`}
             alt="Profile"
-            className="w-12 h-12 rounded-full"
+            className="w-12 h-12 rounded-full cursor-pointer border-2 border-white"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
           />
-       
-      </div>
+
+          {/* Dropdown menu */}
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] text-white rounded-md shadow-lg z-50">
+              <button
+                onClick={() => router.post(route("logout"))}
+                className="w-full text-left px-4 py-2 hover:bg-gradient-to-r hover:from-[#ff416c] hover:to-[#ff4b2b] hover:text-white rounded-md transition"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
     </header>
 
     {/* Main content */}

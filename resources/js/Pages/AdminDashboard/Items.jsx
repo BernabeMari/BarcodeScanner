@@ -14,10 +14,12 @@ export default function ItemsPage({ items}) {
     const [showAllItem, showAllItemState] = useState(true)
     const [showLowItem, showLowItemState] = useState(false)
     const [showHighItem, showHighItemState] = useState(false)
+    const [showSingleItem, showSingleItemState] = useState(false)
+    const [showMultipleItem, showMultipleItemState] = useState(false)
     const [pendingBreak, setPendingBreak] = useState(null)
 
     const catalogItems = useMemo(
-        () => items.filter((item) => item.status === "active" && item.break === "not_break"),
+        () => items.filter((item) => item.status === "active"),
         [items],
     )
 
@@ -31,8 +33,14 @@ export default function ItemsPage({ items}) {
         if (showHighItem) {
             return catalogItems.filter((item) => item.quantity_pack >= 30)
         }
+        if (showSingleItem) {
+            return catalogItems.filter((item) => item.break === 'break')
+        }
+        if (showMultipleItem) {
+            return catalogItems.filter((item) => item.break === 'not_break')
+        }
         return catalogItems
-    }, [catalogItems, showAllItem, showLowItem, showHighItem])
+    }, [catalogItems, showAllItem, showLowItem, showHighItem, showSingleItem, showMultipleItem])
 
     function confirmBreak() {
         if (!pendingBreak) {
@@ -66,6 +74,8 @@ export default function ItemsPage({ items}) {
                                     showAllItemState(true)
                                     showHighItemState(false)
                                     showLowItemState(false)
+                                    showMultipleItemState(false)
+                                    showSingleItemState(false)
                                 }}
                                 className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                             >
@@ -77,6 +87,8 @@ export default function ItemsPage({ items}) {
                                     showLowItemState(true)
                                     showAllItemState(false)
                                     showHighItemState(false)
+                                    showMultipleItemState(false)
+                                    showSingleItemState(false)
                                 }}
                                 className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                             >
@@ -88,10 +100,39 @@ export default function ItemsPage({ items}) {
                                     showHighItemState(true)
                                     showAllItemState(false)
                                     showLowItemState(false)
+                                    showMultipleItemState(false)
+                                    showSingleItemState(false)
                                 }}
                                 className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                             >
                                 High Stock
+                            </button>
+                            
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    showHighItemState(false)
+                                    showAllItemState(false)
+                                    showLowItemState(false)
+                                    showMultipleItemState(false)
+                                    showSingleItemState(true)
+                                }}
+                                className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                Single Item
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    showHighItemState(false)
+                                    showAllItemState(false)
+                                    showLowItemState(false)
+                                    showMultipleItemState(true)
+                                    showSingleItemState(false)
+                                }}
+                                className="bg-blue-600 m-5 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                            >
+                                Multiple Item
                             </button>
                         </div>
 
@@ -128,6 +169,7 @@ export default function ItemsPage({ items}) {
                                                     {item.quantity_piece}
                                                 </p>
                                             </div>
+                                            {item.break === "not_break" && (
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -137,6 +179,7 @@ export default function ItemsPage({ items}) {
                                             >
                                                 Break
                                             </button>
+                                            )}
                                         </div>
                                     </div>
                                     )

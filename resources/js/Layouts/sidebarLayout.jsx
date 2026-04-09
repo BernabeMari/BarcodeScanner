@@ -1,5 +1,9 @@
 import { Link, router } from "@inertiajs/react";
 export default function SidebarLayout({ children }) {
+  const current =
+    route().current("items_page") ? "available" :
+    route().current("break_items_page") ? "broken" :
+    route().current("inactive_items_page") ? "inactive" : ""
   return (
     <div className="flex min-h-screen">
     {/* Sidebar */}
@@ -25,35 +29,29 @@ export default function SidebarLayout({ children }) {
       Barcode Search
     </Link>
 
-    <Link
-      href={route("items_page")}
+    <select
+      value={current}
       className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
-        ${route().current("items_page")
-          ? "bg-gradient-to-r from-white to-[#ff4b2b] text-black font-semibold border-white"
-          : "bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] border-transparent hover:border-white"}`}
-    >
-      Available Items
-    </Link>
-    
-    <Link
-      href={route("break_items_page")}
-      className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
-        ${route().current("break_items_page")
-          ? "bg-gradient-to-r from-white to-[#ff4b2b] text-black font-semibold border-white"
-          : "bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] border-transparent hover:border-white"}`}
-    >
-      Broken Items
-    </Link>
+        ${current
+          ? "bg-white text-black border-white"
+          : "bg-[#ff416c] text-white border-transparent"}`}
+      onChange={(e) => {
+        const value = e.target.value
 
-    <Link
-      href={route("inactive_items_page")}
-      className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
-        ${route().current("inactive_items_page")
-          ? "bg-gradient-to-r from-white to-[#ff4b2b] text-black font-semibold border-white"
-          : "bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] border-transparent hover:border-white"}`}
+        if (value === "available") {
+          router.visit(route("items_page"))
+        } else if (value === "broken") {
+          router.visit(route("break_items_page"))
+        } else if (value === "inactive") {
+          router.visit(route("inactive_items_page"))
+        }
+      }}
     >
-      Inactive Items
-    </Link>
+      <option value="">Select Items</option>
+      <option value="available">Available Items</option>
+      <option value="broken">Broken Items</option>
+      <option value="inactive">Inactive Items</option>
+    </select>
 
     <Link
       href={route("create_user_page")}
@@ -94,14 +92,6 @@ export default function SidebarLayout({ children }) {
     >
       Done Requests
     </Link>
-
-    <button
-      type="button"
-      onClick={() => router.post(route("logout"))}
-      className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] p-2 inline-block rounded-xl m-2 border border-transparent hover:border-white transition text-left opacity-70"
-    >
-      Logout
-    </button>
   </aside>
 
   {/* Main content */}
