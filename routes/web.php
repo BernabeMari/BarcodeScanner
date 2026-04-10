@@ -12,7 +12,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::middleware(['auth', 'role:admin'])->controller(ItemController::class)->group(function(){
+Route::middleware(['auth', 'role:superadmin,admin'])->controller(ItemController::class)->group(function(){
     Route::get('/admin', 'adminPage')->name('admin_page');
     Route::get('/Items', 'itemPage')->name('items_page');
     Route::get('/BreakItems', 'breakItemsPage')->name('break_items_page');

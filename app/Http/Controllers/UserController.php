@@ -38,11 +38,12 @@ class UserController extends Controller
         if(Auth::attempt($credentials)){
             $request->session()->regenerate();
             $user = Auth::user();
-            if ($user->role === 'admin') {
+            if ($user->role === 'superadmin' || $user->role === 'admin') {
                 return redirect()->route('admin_page');
             } elseif ($user->role === 'employee') {
                 return redirect()->route('employee_page');
             }
+
             return redirect()->route('login_page');
         }
 

@@ -14,16 +14,18 @@ class UserIsAdmin
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next, $role): Response
-    {
-        if (!Auth::check()) {
-            return redirect(route('login_page'));
-        }
-
-        if ($request->user()->role !== $role) {
-            return redirect(route('login_page'));
-        }
-
-        return $next($request);
+    public function handle(Request $request, Closure $next, ...$roles): Response
+{
+    if (!Auth::check()) {
+        return redirect(route('login_page'));
     }
+
+    if (!in_array($request->user()->role, $roles)) {
+        return redirect(route('login_page'));
+    }
+
+    return $next($request);
+}
+
+    
 }

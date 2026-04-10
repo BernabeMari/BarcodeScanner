@@ -1,5 +1,9 @@
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
+import { useState } from "react";
+
 export default function SidebarLayout({ children }) {
+  const { props } = usePage();
+  const role = props.auth.user.role; 
   const current =
     route().current("items_page") ? "available" :
     route().current("break_items_page") ? "broken" :
@@ -53,7 +57,8 @@ export default function SidebarLayout({ children }) {
       <option value="inactive">Inactive Items</option>
     </select>
 
-    <Link
+    {role === 'superadmin' && (
+      <Link
       href={route("create_user_page")}
       className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
         ${route().current("create_user_page")
@@ -62,8 +67,10 @@ export default function SidebarLayout({ children }) {
     >
       Create User
     </Link>
-
-    <Link
+    )}
+  
+    {role === 'superadmin' && (
+      <Link
       href={route("requests_page")}
       className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
         ${route().current("requests_page")
@@ -72,8 +79,10 @@ export default function SidebarLayout({ children }) {
     >
       Employee Requests
     </Link>
+    )}
 
-    <Link
+    {role === 'superadmin' && (
+      <Link
       href={route("requests_audit_logs_page")}
       className={`p-2 inline-block rounded-xl m-2 border transition opacity-70
         ${route().current("requests_audit_logs_page")
@@ -82,6 +91,7 @@ export default function SidebarLayout({ children }) {
     >
       Audit Logs
     </Link>
+    )}
 
     <Link
       href={route("requests_done_page")}

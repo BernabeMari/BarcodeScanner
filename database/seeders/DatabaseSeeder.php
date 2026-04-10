@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'username' => 'zyb',
             'password' => 'zyb',
-            'role' => 'admin',
+            'role' => 'superadmin',
         ]);
     }
 }
