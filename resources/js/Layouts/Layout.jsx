@@ -13,30 +13,34 @@ export default function Layout({ children }) {
 
     return (
         <div className="min-h-screen flex flex-col bg-slate-100">
-            <header className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] fixed top-0 left-0 w-full text-white min-h-[5rem] font-bold p-4 z-50 flex items-center justify-between shadow-md">
-                <div className="flex items-center min-w-0">
-                    <img src="/images/tcu-logo.jpg" alt="TCU Logo" className="w-12 h-12 rounded-full shrink-0 ring-2 ring-white/30" />
-                    <div className="ml-4 flex flex-col min-w-0">
-                        <h1 className="text-xl sm:text-2xl italic truncate">Taguig City University</h1>
-                        <p className="text-xs sm:text-sm font-normal italic truncate opacity-95">
+            <header className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] fixed top-0 left-0 w-full text-white min-h-[5rem] font-bold z-50 flex items-center justify-between gap-2 px-3 py-3 sm:px-4 sm:py-4 shadow-md">
+                <div className="flex min-w-0 flex-1 items-center">
+                    <img
+                        src="/images/tcu-logo.jpg"
+                        alt="TCU Logo"
+                        className="h-10 w-10 shrink-0 rounded-full ring-2 ring-white/30 sm:h-12 sm:w-12"
+                    />
+                    <div className="ml-2 flex min-w-0 flex-col sm:ml-4">
+                        <h1 className="truncate text-base italic sm:text-xl md:text-2xl">Taguig City University</h1>
+                        <p className="truncate text-[10px] font-normal italic opacity-95 sm:text-xs md:text-sm">
                             Transforming Excellence into Purpose
                         </p>
                     </div>
                 </div>
 
-                <div className="ml-auto relative shrink-0">
+                <div className="relative shrink-0">
                     {avatarSrc ? (
                         <img
                             src={avatarSrc}
                             alt=""
-                            className="w-12 h-12 rounded-full cursor-pointer border-2 border-white object-cover"
+                            className="h-10 w-10 cursor-pointer rounded-full border-2 border-white object-cover sm:h-12 sm:w-12"
                             onClick={() => setDropdownOpen(!dropdownOpen)}
                         />
                     ) : (
                         <button
                             type="button"
                             onClick={() => setDropdownOpen(!dropdownOpen)}
-                            className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white bg-white/20 text-sm font-semibold uppercase"
+                            className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-white/20 text-xs font-semibold uppercase sm:h-12 sm:w-12 sm:text-sm"
                             aria-label="Account menu"
                         >
                             {(user?.username ?? "?").slice(0, 2)}

@@ -2,9 +2,27 @@ import EmployeeLayout from "@/Layouts/EmployeeLayout"
 import Layout from "@/Layouts/Layout"
 import { router } from "@inertiajs/react"
 
+function formatRequestLines(message, quantities) {
+    const lines = Array.isArray(message) ? message : message != null && String(message).trim() !== "" ? [String(message)] : []
+    const qty = Array.isArray(quantities) ? quantities : []
+    if (lines.length === 0) return [{ text: "—", key: "empty" }]
+    return lines.map((msg, i) => ({
+        key: i,
+        text: msg,
+        qty: qty[i],
+    }))
+}
+
 export default function ReceiptPreview({ request, items, user }) {
     const handleDownload = () => {
-        window.open(route("generate_receipt", request.id), '_blank')
+        const url = route("generate_receipt", request.id)
+        const a = document.createElement("a")
+        a.href = url
+        a.setAttribute("download", `receipt_${request.id}.pdf`)
+        a.rel = "noopener"
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
     }
 
     const handleCancel = () => {
@@ -14,21 +32,21 @@ export default function ReceiptPreview({ request, items, user }) {
     return (
         <Layout>
             <EmployeeLayout>
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                            <h1 className="text-2xl font-semibold text-gray-900">Receipt Preview</h1>
-                            <p className="text-gray-600 mt-1">Review your receipt before downloading</p>
+                <div className="mx-auto w-full max-w-4xl px-0 sm:px-1">
+                    <div className="overflow-hidden rounded-lg bg-white shadow-lg">
+                        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 sm:py-4">
+                            <h1 className="text-xl font-semibold text-gray-900 sm:text-2xl">Receipt Preview</h1>
+                            <p className="mt-1 text-sm text-gray-600 sm:text-base">Review your receipt before downloading the PDF</p>
                         </div>
 
-                        <div className="p-6">
+                        <div className="p-4 sm:p-6">
                             {/* Receipt Content */}
-                            <div className="border-2 border-gray-300 rounded-lg p-6 bg-gray-50">
+                            <div className="rounded-lg border-2 border-gray-300 bg-gray-50 p-4 sm:p-6">
                                 {/* Header */}
-                                <div className="text-center border-b-2 border-gray-400 pb-4 mb-6">
-                                    <h2 className="text-3xl font-bold text-gray-900">Item Issuance Receipt</h2>
-                                    <p className="text-lg text-gray-600 mt-2">Request ID: #{request.id}</p>
-                                    <p className="text-sm text-gray-500">Generated on: {new Date().toLocaleString()}</p>
+                                <div className="mb-6 border-b-2 border-gray-400 pb-4 text-center">
+                                    <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Item Issuance Receipt</h2>
+                                    <p className="mt-2 text-base text-gray-600 sm:text-lg">Request ID: #{request.id}</p>
+                                    <p className="text-xs text-gray-500 sm:text-sm">Generated on: {new Date().toLocaleString()}</p>
                                 </div>
 
                                 {/* Requester Information */}
@@ -48,8 +66,16 @@ export default function ReceiptPreview({ request, items, user }) {
 
                                 {/* Request Details */}
                                 <div className="mb-6">
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-3">Request Details</h3>
-                                    <p className="text-sm"><span className="font-medium">Message:</span> {request.message}</p>
+                                    <h3 className="mb-3 text-lg font-semibold text-gray-900 sm:text-xl">Request Details</h3>
+                                    <p className="text-sm font-medium text-gray-800">Request line(s):</p>
+                                    <ul className="mt-1 list-disc pl-5 text-sm text-gray-700">
+                                        {formatRequestLines(request.message, request.request_quantity).map((row) => (
+                                            <li key={row.key}>
+                                                {row.text}
+                                                {row.qty !== undefined && row.qty !== null && row.qty !== "" ? ` — Qty: ${row.qty}` : ""}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
 
                                 {/* Issued Items */}
@@ -105,18 +131,20 @@ export default function ReceiptPreview({ request, items, user }) {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex justify-center space-x-4 mt-6">
+                            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-center sm:gap-4">
                                 <button
-                                    onClick={handleDownload}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium"
-                                >
-                                    Download Receipt
-                                </button>
-                                <button
+                                    type="button"
                                     onClick={handleCancel}
-                                    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium"
+                                    className="rounded-lg bg-gray-500 px-6 py-2.5 font-medium text-white hover:bg-gray-600 sm:py-2"
                                 >
                                     Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleDownload}
+                                    className="rounded-lg bg-green-600 px-6 py-2.5 font-medium text-white hover:bg-green-700 sm:py-2"
+                                >
+                                    Download PDF receipt
                                 </button>
                             </div>
                         </div>

@@ -6,6 +6,7 @@ use App\Models\Item;
 use App\Models\Request as ItemRequest;
 use App\Models\RequestAudit;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -804,16 +805,13 @@ public function create_single_item(Request $request){
 
         $verifiedItems = $req->verified_items;
 
-        // Generate a simple HTML receipt
-        $html = view('receipt', [
+        $pdf = Pdf::loadView('receipt', [
             'request' => $req,
             'items' => $verifiedItems,
             'user' => $request->user(),
-        ])->render();
+        ])->setPaper('a4', 'portrait');
 
-        return response($html, 200)
-            ->header('Content-Type', 'text/html')
-            ->header('Content-Disposition', 'attachment; filename="receipt_' . $req->id . '.html"');
+        return $pdf->download('receipt_' . $req->id . '.pdf');
     }
 
     public function requestsDonePage(Request $request){
