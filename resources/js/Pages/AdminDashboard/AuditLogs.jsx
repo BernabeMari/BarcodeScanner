@@ -10,10 +10,10 @@ export default function AuditLogs({ logs }) {
     return (
             <Layout>
                 <SidebarLayout>
-                    <h1 className="text-2xl font-semibold text-slate-900 mb-4">Audit logs</h1>
+                    <h1 className="mb-4 text-2xl font-semibold text-white drop-shadow-md">Audit logs</h1>
 
                     {logs.length === 0 ? (
-                        <p className="text-gray-500">No audit entries yet.</p>
+                        <p className="text-white/75">No audit entries yet.</p>
                     ) : (
                         <div className="space-y-4">
                             {logs.map((log) => (
@@ -46,7 +46,7 @@ export default function AuditLogs({ logs }) {
                                         #{log.request_id}{" "}
                                         <span className="text-gray-400">
                                             (by{" "}
-                                            {log.request?.user?.username ?? "Unknown"})"
+                                            {log.request?.user?.username ?? "Unknown"})
                                         </span>
                                     </p>
 

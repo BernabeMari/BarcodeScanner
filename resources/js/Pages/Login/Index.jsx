@@ -1,3 +1,4 @@
+import TcuPageBackground from "@/Components/TcuPageBackground"
 import { useForm } from "@inertiajs/react"
 import { useState } from "react"
 
@@ -17,8 +18,9 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-slate-100">
-            <header className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] text-white py-6 px-4 shadow-md">
+        <div className="relative flex min-h-screen flex-col">
+            <TcuPageBackground />
+            <header className="relative z-50 bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] px-4 py-6 text-white shadow-md">
                 <div className="mx-auto flex max-w-md items-center gap-3">
                     <img src="/images/tcu-logo.jpg" alt="" className="h-14 w-14 rounded-full ring-2 ring-white/30" />
                     <div>
@@ -28,7 +30,7 @@ export default function Login() {
                 </div>
             </header>
 
-            <div className="flex flex-1 items-center justify-center p-4">
+            <div className="relative z-10 flex flex-1 items-center justify-center p-4">
                 <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                     <div className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] px-6 py-5">
                         <p className="text-center text-lg font-semibold text-white sm:text-xl">Sign in</p>
@@ -66,7 +68,7 @@ export default function Login() {
                 </div>
             </div>
 
-            <footer className="bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] py-3 text-center text-xs font-semibold text-white sm:text-sm">
+            <footer className="relative z-50 bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] py-3 text-center text-xs font-semibold text-white sm:text-sm">
                 © {new Date().getFullYear()} Taguig City University — All rights reserved
             </footer>
         </div>

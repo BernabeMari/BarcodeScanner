@@ -117,8 +117,8 @@ export default function Requests({ requests, breakItems = [] }) {
     return (
             <Layout>
                 <SidebarLayout>
-                    <h1 className="text-2xl font-semibold text-slate-900 mb-4">Employee requests</h1>
-                    <p className="text-slate-600 mb-2">
+                    <h1 className="mb-4 text-2xl font-semibold text-white drop-shadow-md">Employee requests</h1>
+                    <p className="mb-2 text-sm text-white/85 sm:text-base">
                         <strong>Multiple:</strong> scan regular inventory (break items cannot be scanned).
                         <br />
                         <strong>Single:</strong> add one or more break lines (product + pieces), then approve — stock is deducted on approve. <strong>Mark as issued</strong> also marks break barcodes inactive when that line is fully depleted (so they no longer appear as available on Available Items).
@@ -133,7 +133,7 @@ export default function Requests({ requests, breakItems = [] }) {
                     )}
 
                     {requests.length === 0 ? (
-                        <p className="text-gray-500">No requests yet.</p>
+                        <p className="text-white/75">No requests yet.</p>
                     ) : (
                         <ul className="space-y-4">
                             {requests.map((req) => (

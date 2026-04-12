@@ -33,13 +33,13 @@ export default function InactiveItemsPage({ items }) {
     return (
             <Layout>
                 <SidebarLayout>
-                    <p className="text-slate-900 text-2xl font-bold mb-4">Inactive items (by barcode)</p>
-                    <p className="text-slate-600 text-sm mb-4 max-w-2xl">
+                    <p className="mb-4 text-2xl font-bold tracking-tight text-white drop-shadow-md">Inactive items (by barcode)</p>
+                    <p className="mb-4 max-w-2xl text-sm text-white/85">
                         Each row is one inactive barcode slot. Products with several barcodes can be partly active
                         and partly inactive.
                     </p>
                     {rows.length === 0 ? (
-                        <p className="text-slate-600">No inactive barcode slots.</p>
+                        <p className="text-white/80">No inactive barcode slots.</p>
                     ) : (
                         rows.map((row) => (
                             <div

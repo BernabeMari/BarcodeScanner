@@ -27,13 +27,13 @@ export default function CreateUser({ users }) {
     return (
         <Layout>
             <SidebarLayout>
-                <h1 className="text-2xl font-semibold text-slate-900 mb-1">Users</h1>
-                <p className="text-slate-600 mb-6 text-sm">
+                <h1 className="mb-1 text-2xl font-semibold text-white drop-shadow-md">Users</h1>
+                <p className="mb-6 text-sm text-white/85">
                     View all accounts. Tap the + button (bottom right) to create a new user.
                 </p>
 
                 {users.length === 0 ? (
-                    <p className="text-slate-500 text-sm">No users yet.</p>
+                    <p className="text-sm text-white/75">No users yet.</p>
                 ) : (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-24">
                         {users.map((user) => (

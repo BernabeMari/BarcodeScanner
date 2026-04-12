@@ -165,69 +165,72 @@ export default function Index({ users }) {
                         </div>
                     </div>
 
-                    {showMultipleRequest && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Multiple requests</h2>
-                            <p className="mt-1 text-sm text-slate-600">
-                                Add one row per item. Remove rows you don&apos;t need.
-                            </p>
-                            <form onSubmit={submitMultipleRequest} className="mt-6 space-y-6">
-                                <RequestLinesEditor
-                                    messages={requestData.message}
-                                    quantities={requestData.request_quantity}
-                                    setData={setRequestData}
-                                    quantityLabel="Quantity (per pack)"
-                                />
-                                <div className="flex flex-wrap gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={addLine}
-                                        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                                    >
-                                        + Add line
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="rounded-xl bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] px-6 py-2.5 text-sm font-semibold text-white shadow hover:opacity-95"
-                                    >
-                                        Submit request
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
-
-                    {showSingleRequest && (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Single requests</h2>
-                            <p className="mt-1 text-sm text-slate-600">
-                                One or more lines; each quantity is per piece.
-                            </p>
-                            <form onSubmit={submitSingleRequest} className="mt-6 space-y-6">
-                                <RequestLinesEditor
-                                    messages={requestData.message}
-                                    quantities={requestData.request_quantity}
-                                    setData={setRequestData}
-                                    quantityLabel="Quantity (per piece)"
-                                />
-                                <div className="flex flex-wrap gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={addLine}
-                                        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                                    >
-                                        + Add line
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="rounded-xl bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] px-6 py-2.5 text-sm font-semibold text-white shadow hover:opacity-95"
-                                    >
-                                        Submit request
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    )}
+                    <div
+                        key={showSingleRequest ? "single" : "multiple"}
+                        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm animate-modePanelIn"
+                    >
+                        {showMultipleRequest ? (
+                            <>
+                                <h2 className="text-lg font-semibold text-slate-900">Multiple requests</h2>
+                                <p className="mt-1 text-sm text-slate-600">
+                                    Add one row per item. Remove rows you don&apos;t need.
+                                </p>
+                                <form onSubmit={submitMultipleRequest} className="mt-6 space-y-6">
+                                    <RequestLinesEditor
+                                        messages={requestData.message}
+                                        quantities={requestData.request_quantity}
+                                        setData={setRequestData}
+                                        quantityLabel="Quantity (per pack)"
+                                    />
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={addLine}
+                                            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                        >
+                                            + Add line
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="rounded-xl bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] px-6 py-2.5 text-sm font-semibold text-white shadow hover:opacity-95"
+                                        >
+                                            Submit request
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-lg font-semibold text-slate-900">Single requests</h2>
+                                <p className="mt-1 text-sm text-slate-600">
+                                    One or more lines; each quantity is per piece.
+                                </p>
+                                <form onSubmit={submitSingleRequest} className="mt-6 space-y-6">
+                                    <RequestLinesEditor
+                                        messages={requestData.message}
+                                        quantities={requestData.request_quantity}
+                                        setData={setRequestData}
+                                        quantityLabel="Quantity (per piece)"
+                                    />
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={addLine}
+                                            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                                        >
+                                            + Add line
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="rounded-xl bg-gradient-to-r from-[#ff416c] to-[#ff4b2b] px-6 py-2.5 text-sm font-semibold text-white shadow hover:opacity-95"
+                                        >
+                                            Submit request
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        )}
+                    </div>
 
                     {showSuccess && (
                         <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">

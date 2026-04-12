@@ -17,8 +17,8 @@ export default function MyRequests({ requests }) {
     return (
             <Layout>
             <EmployeeLayout>
-                <h1 className="text-2xl font-semibold text-slate-900 mb-2">My requests</h1>
-                <p className="text-slate-600 mb-6">
+                <h1 className="mb-2 text-2xl font-semibold text-white drop-shadow-md">My requests</h1>
+                <p className="mb-6 text-white/85">
                     Track your item requests and their status.
                 </p>
                 {flash?.success && (

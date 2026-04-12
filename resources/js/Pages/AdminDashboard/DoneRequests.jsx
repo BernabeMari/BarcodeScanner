@@ -45,7 +45,7 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
             <Layout>
                 <SidebarLayout>
                     <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-                        <h1 className="text-2xl font-semibold text-slate-900">Done requests</h1>
+                        <h1 className="text-2xl font-semibold text-white drop-shadow-md">Done requests</h1>
                         <div className="flex gap-2 flex-wrap">
                             <button
                                 type="button"
@@ -145,7 +145,7 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
                     </div>
 
                     {requests.length === 0 ? (
-                        <p className="text-gray-500">No done requests yet.</p>
+                        <p className="text-white/75">No done requests yet.</p>
                     ) : (
                         <ul className="space-y-4">
                             {requests.map((req) => (

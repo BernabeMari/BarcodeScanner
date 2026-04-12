@@ -1,7 +1,7 @@
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
 import { router } from "@inertiajs/react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 
 function barcodeSlotActive(item, index) {
     if (Array.isArray(item.statuses) && item.statuses[index] !== undefined) {
@@ -84,13 +84,13 @@ function FilterBtn({ active, onClick, icon: Icon, children }) {
             type="button"
             onClick={onClick}
             className={[
-                "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm transition-all duration-200",
+                "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-200",
                 active
-                    ? "bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 ring-2 ring-white/40"
-                    : "bg-white/10 text-white hover:bg-white/20 hover:ring-1 hover:ring-white/30",
+                    ? "bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 ring-2 ring-amber-200/80"
+                    : "border border-slate-200 bg-white text-slate-800 hover:border-amber-200 hover:bg-amber-50/90",
             ].join(" ")}
         >
-            <Icon className="h-4 w-4 shrink-0 opacity-90" />
+            <Icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-900" : "text-slate-600"}`} />
             {children}
         </button>
     )
@@ -140,6 +140,55 @@ export default function ItemsPage({ items, searchMeta = {} }) {
 
     const showInactiveSlots = Boolean(searchByQuery)
     const hasServerSearch = Boolean((q && q.length > 0) || (barcodeParam && String(barcodeParam).length > 0))
+
+    const PER_PAGE = 10
+
+    const slotRows = useMemo(() => {
+        const rows = []
+        for (const item of visibleItems) {
+            const codes = Array.isArray(item.barcode)
+                ? item.barcode.filter((c) => c != null && String(c).trim() !== "")
+                : []
+            codes.forEach((code, idx) => {
+                const slotActive = barcodeSlotActive(item, idx)
+                if (!showInactiveSlots && !slotActive) {
+                    return
+                }
+                rows.push({
+                    key: `${item.id}-${code}-${idx}`,
+                    item,
+                    code,
+                    idx,
+                    slotActive,
+                })
+            })
+        }
+        return rows
+    }, [visibleItems, showInactiveSlots])
+
+    const [listPage, setListPage] = useState(1)
+
+    useEffect(() => {
+        setListPage(1)
+    }, [items, q, barcodeParam, showAllItem, showLowItem, showHighItem, showSingleItem, showMultipleItem])
+
+    const totalListPages = Math.max(1, Math.ceil(slotRows.length / PER_PAGE))
+    const safeListPage = Math.min(listPage, totalListPages)
+    const listStart = (safeListPage - 1) * PER_PAGE
+    const paginatedSlots = slotRows.slice(listStart, listStart + PER_PAGE)
+
+    useEffect(() => {
+        if (listPage > totalListPages) {
+            setListPage(totalListPages)
+        }
+    }, [listPage, totalListPages])
+
+    const goListPage = useCallback((next) => {
+        setListPage(() => {
+            const tp = Math.max(1, Math.ceil(slotRows.length / PER_PAGE))
+            return Math.min(Math.max(1, next), tp)
+        })
+    }, [slotRows.length])
 
     function confirmBreak() {
         if (!pendingBreak) {
@@ -196,7 +245,7 @@ export default function ItemsPage({ items, searchMeta = {} }) {
             <Layout>
                 <SidebarLayout>
                     <div>
-                        <h1 className="mb-4 text-2xl font-bold tracking-tight text-slate-900">Available items</h1>
+                        <h1 className="mb-4 text-2xl font-bold tracking-tight text-white drop-shadow-md">Available items</h1>
 
                         <div className="mb-6 rounded-2xl border border-white/15 bg-slate-900/40 p-4 shadow-lg backdrop-blur-md">
                             <p className="mb-3 text-sm text-white/70">Search inventory by product name, exact barcode, or scanner-style entry.</p>
@@ -283,7 +332,7 @@ export default function ItemsPage({ items, searchMeta = {} }) {
                             )}
                         </div>
 
-                        <div className="mb-6 flex flex-wrap justify-center gap-2 md:justify-start">
+                        <div className="mb-6 flex flex-wrap justify-center gap-2 rounded-2xl border border-white/15 bg-slate-900/35 p-3 shadow-inner backdrop-blur-sm md:justify-start">
                             <FilterBtn
                                 active={showAllItem}
                                 onClick={() => {
@@ -349,18 +398,13 @@ export default function ItemsPage({ items, searchMeta = {} }) {
                         </div>
 
                         <div>
-                            {visibleItems.flatMap((item) => {
-                                const codes = Array.isArray(item.barcode)
-                                    ? item.barcode.filter((c) => c != null && String(c).trim() !== "")
-                                    : []
-                                return codes.flatMap((code, idx) => {
-                                    const slotActive = barcodeSlotActive(item, idx)
-                                    if (!showInactiveSlots && !slotActive) {
-                                        return []
-                                    }
-                                    return (
+                            {slotRows.length === 0 ? (
+                                <p className="text-white/75">No barcode rows match the current filters or search.</p>
+                            ) : (
+                                <>
+                                    {paginatedSlots.map(({ key, item, code, idx, slotActive }) => (
                                         <div
-                                            key={`${item.id}-${code}-${idx}`}
+                                            key={key}
                                             className="mb-2 rounded-xl border border-gray-200/90 bg-white p-1 shadow-sm"
                                         >
                                             <div className="flex flex-col justify-between gap-3 rounded-lg border border-gray-100 bg-white p-4 sm:flex-row sm:items-center">
@@ -414,9 +458,46 @@ export default function ItemsPage({ items, searchMeta = {} }) {
                                                 )}
                                             </div>
                                         </div>
-                                    )
-                                })
-                            })}
+                                    ))}
+
+                                    {totalListPages > 1 && (
+                                        <nav
+                                            className="mt-6 flex flex-col items-stretch gap-3 rounded-2xl border border-white/15 bg-slate-900/40 px-4 py-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between"
+                                            aria-label="Inventory pagination"
+                                        >
+                                            <p className="text-center text-sm text-white/85 sm:text-left">
+                                                Showing{" "}
+                                                <span className="font-semibold text-white">
+                                                    {listStart + 1}–{Math.min(listStart + PER_PAGE, slotRows.length)}
+                                                </span>{" "}
+                                                of <span className="font-semibold text-white">{slotRows.length}</span>{" "}
+                                                rows
+                                            </p>
+                                            <div className="flex flex-wrap items-center justify-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    disabled={safeListPage <= 1}
+                                                    onClick={() => goListPage(safeListPage - 1)}
+                                                    className="rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                                >
+                                                    Previous
+                                                </button>
+                                                <span className="px-2 text-sm font-medium text-white/90">
+                                                    Page {safeListPage} / {totalListPages}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    disabled={safeListPage >= totalListPages}
+                                                    onClick={() => goListPage(safeListPage + 1)}
+                                                    className="rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </nav>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </div>
 

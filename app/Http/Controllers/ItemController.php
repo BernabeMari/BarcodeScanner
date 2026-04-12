@@ -263,6 +263,7 @@ public function create_single_item(Request $request){
                 'barcode' => [$request->barcode],
                 'statuses' => ['active'],
                 'product_name' => $item->product_name,
+                'item_type' => $item->item_type ?? 'Unit',
                 'quantity_pack' => $splitPieces,
                 'quantity_piece' => $item->quantity_piece,
                 'status' => 'active',

@@ -20,16 +20,16 @@ export default function BreakItemsPage({ items }) {
     return (
             <Layout>
                 <SidebarLayout>
-                    <p className="text-slate-900 text-2xl font-bold mb-4">Break items</p>
+                    <p className="mb-4 text-2xl font-bold tracking-tight text-white drop-shadow-md">Break items</p>
                     {errors?.unbreak && (
-                        <p className="text-red-600 text-sm mb-4 max-w-2xl">
+                        <p className="mb-4 max-w-2xl rounded-xl border border-red-200/60 bg-white/95 px-4 py-3 text-sm text-red-700 shadow-sm">
                             {Array.isArray(errors.unbreak) ? errors.unbreak[0] : errors.unbreak}
                         </p>
                     )}
                     {items.length === 0 ? (
-                        <p className="text-slate-600">No break items yet.</p>
+                        <p className="text-white/75">No break items yet.</p>
                     ) : (
-                        items.filter((item) => item.quantity_pack > 0).map((item) => (
+                        items.filter((item) => item.quantity_pack > 0 && item.break === "break").map((item) => (
                             <div
                                 key={item.id}
                                 className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm mb-2"
