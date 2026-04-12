@@ -225,7 +225,9 @@ export default function Scanner() {
                             <>
                                 <h2 className="text-lg font-semibold text-slate-900">Single (break line)</h2>
                                 <p className="mt-1 text-sm text-slate-600">
-                                    One product row with one or more barcodes. Remove lines you don&apos;t need.
+                                    Each barcode is saved as its own inventory row (easier to issue, deduct, and show as
+                                    inactive per barcode). All lines share the same product name, type, and piece count.
+                                    Remove lines you don&apos;t need.
                                 </p>
                                 <form onSubmit={submit_single_item} className="mt-6 space-y-6">
                                     <div>

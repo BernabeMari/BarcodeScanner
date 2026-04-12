@@ -179,12 +179,25 @@ public function create_single_item(Request $request){
         return back()->withErrors(['barcode' => 'Add at least one barcode.']);
     }
 
-    $items['barcode'] = $barcodes;
-    $items['quantity_pack'] = count($barcodes);
-    $items['break'] = 'break';
-
     Item::assertUniqueBarcodes($barcodes);
-    Item::create($items);
+
+    $pieces = max(0, (int) $items['quantity_piece']);
+
+    DB::transaction(function () use ($items, $barcodes, $pieces) {
+        foreach ($barcodes as $b) {
+            Item::create([
+                'barcode' => [$b],
+                'statuses' => ['active'],
+                'product_name' => $items['product_name'],
+                'item_type' => $items['item_type'],
+                'quantity_pack' => $pieces,
+                'quantity_piece' => $pieces,
+                'status' => $items['status'],
+                'break' => 'break',
+                'break_initial_pieces' => $pieces,
+            ]);
+        }
+    });
 }
 
     /**
@@ -636,19 +649,26 @@ public function create_single_item(Request $request){
                 $alloc = $req->admin_break_allocations ?? [];
                 if (is_array($alloc)) {
                     foreach ($alloc as $line) {
-                        $item = Item::lockForUpdate()->find($line['item_id'] ?? null);
+                        $itemId = (int) ($line['item_id'] ?? 0);
+                        if ($itemId < 1) {
+                            continue;
+                        }
+                        $item = Item::lockForUpdate()->find($itemId);
                         if (! $item || $item->break !== 'break') {
                             continue;
                         }
-                        if ((int) $item->quantity_pack !== 0) {
-                            continue;
-                        }
-                        $codes = array_values(array_filter(
-                            $item->barcode ?? [],
-                            fn ($c) => $c !== null && trim((string) $c) !== ''
-                        ));
-                        foreach ($codes as $code) {
+                        // Match multiple-request behavior: mark fulfilled break barcodes inactive on issue.
+                        // (Stock was already deducted on approve; do not require quantity_pack === 0 — partial
+                        // allocations would never inactivate otherwise.)
+                        $code = trim((string) ($line['barcode'] ?? ''));
+                        if ($code !== '' && $item->indexOfBarcode($code) !== null) {
                             $item->setBarcodeStatus($code, 'inactive');
+                        } else {
+                            foreach ($item->barcode ?? [] as $c) {
+                                if ($c !== null && trim((string) $c) !== '') {
+                                    $item->setBarcodeStatus((string) $c, 'inactive');
+                                }
+                            }
                         }
                         $item->save();
                     }
@@ -692,7 +712,11 @@ public function create_single_item(Request $request){
         if ($req->request_type === 'single') {
             $alloc = $req->admin_break_allocations ?? [];
             foreach ($alloc as $line) {
-                $item = Item::find($line['item_id'] ?? null);
+                $itemId = (int) ($line['item_id'] ?? 0);
+                if ($itemId < 1) {
+                    continue;
+                }
+                $item = Item::find($itemId);
                 if ($item) {
                     $item->quantity_pack += (int) ($line['quantity'] ?? 0);
                     $item->save();
