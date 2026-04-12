@@ -119,9 +119,9 @@ export default function Requests({ requests, breakItems = [] }) {
                 <SidebarLayout>
                     <h1 className="mb-4 text-2xl font-semibold text-white drop-shadow-md">Employee requests</h1>
                     <p className="mb-2 text-sm text-white/85 sm:text-base">
-                        <strong>Multiple:</strong> scan regular inventory (break items cannot be scanned).
+                        <strong>Multiple:</strong> scanning adds a line to the request and sets that barcode <strong>inactive</strong> (reserved). <strong>Remove</strong> from verified list, <strong>reject</strong>, or employee <strong>cancel</strong> sets it active again. <strong>Cancel issuance</strong> (approved, not issued) does the same. Approve only checks items are still reserved.
                         <br />
-                        <strong>Single:</strong> add one or more break lines (product + pieces), then approve — stock is deducted on approve. <strong>Mark as issued</strong> also marks break barcodes inactive when that line is fully depleted (so they no longer appear as available on Available Items).
+                        <strong>Single:</strong> each <strong>allocation line</strong> reserves the break row (inactive) until you remove that line, reject/cancel while pending, or <strong>cancel issuance</strong> when approved. On <strong>approve</strong>, stock is deducted; if pieces remain on the row, it becomes active again; if quantity hits zero it stays inactive. <strong>Mark as issued</strong> inactivates any still-active allocated barcodes.
                     </p>
                     {flash?.success && <p className="mb-4 text-green-700 text-sm">{flash.success}</p>}
                     {errors?.barcode && <p className="mb-4 text-red-600 text-sm">{errors.barcode}</p>}

@@ -370,6 +370,51 @@ public function create_single_item(Request $request){
             ->get();
     }
 
+    /**
+     * @param  array<int, string>  $barcodes
+     */
+    protected function activateBarcodeSlots(array $barcodes): void
+    {
+        foreach ($barcodes as $b) {
+            $b = trim((string) $b);
+            if ($b === '') {
+                continue;
+            }
+            $inv = Item::whereBarcodeContains($b)->first();
+            if ($inv) {
+                $inv->setBarcodeStatus($b, 'active');
+                $inv->save();
+            }
+        }
+    }
+
+    protected function activateAllSlotsOnItem(?Item $item): void
+    {
+        if (! $item) {
+            return;
+        }
+        $codes = array_values(array_filter(
+            $item->barcode ?? [],
+            fn ($c) => $c !== null && trim((string) $c) !== ''
+        ));
+        foreach ($codes as $code) {
+            $item->setBarcodeStatus((string) $code, 'active');
+        }
+        $item->save();
+    }
+
+    protected function deactivateAllSlotsOnItem(Item $item): void
+    {
+        $codes = array_values(array_filter(
+            $item->barcode ?? [],
+            fn ($c) => $c !== null && trim((string) $c) !== ''
+        ));
+        foreach ($codes as $code) {
+            $item->setBarcodeStatus((string) $code, 'inactive');
+        }
+        $item->save();
+    }
+
     public function saveBreakAllocation($id, Request $request)
     {
         $request->validate([
@@ -387,40 +432,54 @@ public function create_single_item(Request $request){
             return back()->withErrors(['allocation' => 'Allocation lines can only be added while the request is pending.']);
         }
 
-        $item = Item::findOrFail($request->integer('item_id'));
-        if ($item->break !== 'break' || $item->computeAggregateStatus() !== 'active') {
-            return back()->withErrors(['allocation' => 'Choose an active break item.']);
-        }
-
-        $qty = $request->integer('quantity');
-        if ($qty > $item->quantity_pack) {
-            return back()->withErrors(['allocation' => 'Not enough pieces available for this break item.']);
-        }
-
         $lines = $req->admin_break_allocations ?? [];
         if (! is_array($lines)) {
             $lines = [];
         }
 
         foreach ($lines as $line) {
-            if ((int) ($line['item_id'] ?? 0) === (int) $item->id) {
+            if ((int) ($line['item_id'] ?? 0) === (int) $request->integer('item_id')) {
                 return back()->withErrors([
                     'allocation' => 'This item has already been added to this request.',
                 ]);
             }
         }
 
-        $codes = $item->barcode ?? [];
-        $barcodeLabel = is_array($codes) && count($codes) > 0 ? (string) $codes[0] : '';
+        DB::beginTransaction();
+        try {
+            $item = Item::lockForUpdate()->findOrFail($request->integer('item_id'));
+            if ($item->break !== 'break' || $item->computeAggregateStatus() !== 'active') {
+                DB::rollBack();
 
-        $lines[] = [
-            'item_id' => $item->id,
-            'quantity' => $qty,
-            'product_name' => $item->product_name,
-            'barcode' => $barcodeLabel,
-        ];
-        $req->admin_break_allocations = $lines;
-        $req->save();
+                return back()->withErrors(['allocation' => 'Choose an active break item.']);
+            }
+
+            $qty = $request->integer('quantity');
+            if ($qty > $item->quantity_pack) {
+                DB::rollBack();
+
+                return back()->withErrors(['allocation' => 'Not enough pieces available for this break item.']);
+            }
+
+            $codes = $item->barcode ?? [];
+            $barcodeLabel = is_array($codes) && count($codes) > 0 ? (string) $codes[0] : '';
+
+            $lines[] = [
+                'item_id' => $item->id,
+                'quantity' => $qty,
+                'product_name' => $item->product_name,
+                'barcode' => $barcodeLabel,
+            ];
+            $req->admin_break_allocations = $lines;
+            $req->save();
+
+            $this->deactivateAllSlotsOnItem($item);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         return back()->with('success', 'Break item allocation line added.');
     }
@@ -451,9 +510,15 @@ public function create_single_item(Request $request){
             return back()->withErrors(['allocation' => 'Invalid allocation line.']);
         }
 
+        $removed = $lines[$index];
         array_splice($lines, $index, 1);
         $req->admin_break_allocations = array_values($lines);
         $req->save();
+
+        $removedItem = Item::find((int) ($removed['item_id'] ?? 0));
+        if ($removedItem) {
+            $this->activateAllSlotsOnItem($removedItem);
+        }
 
         return back()->with('success', 'Allocation line removed.');
     }
@@ -475,30 +540,44 @@ public function create_single_item(Request $request){
             ]);
         }
 
-        $item = Item::whereBarcodeContains($request->barcode)->first();
-
-        if (! $item) {
-            return back()->withErrors(['barcode' => 'Product not found for this barcode.']);
-        }
-
-        if ($item->break === 'break') {
-            return back()->withErrors([
-                'barcode' => 'This is a break item. It cannot be added to a multiple request.',
-            ]);
-        }
-
-        if (! $item->barcodeIsActive($request->barcode)) {
-            return back()->withErrors(['barcode' => 'This item is not available (not active in inventory).']);
-        }
-
         $barcodes = $req->item_barcodes ?? [];
         if (in_array($request->barcode, $barcodes, true)) {
             return back()->withErrors(['barcode' => 'This item has already been added to this request.']);
         }
 
-        $barcodes[] = $request->barcode;
-        $req->item_barcodes = array_values($barcodes);
-        $req->save();
+        DB::beginTransaction();
+        try {
+            $item = Item::lockForUpdate()->whereBarcodeContains($request->barcode)->first();
+            if (! $item) {
+                DB::rollBack();
+
+                return back()->withErrors(['barcode' => 'Product not found for this barcode.']);
+            }
+            if ($item->break === 'break') {
+                DB::rollBack();
+
+                return back()->withErrors([
+                    'barcode' => 'This is a break item. It cannot be added to a multiple request.',
+                ]);
+            }
+            if (! $item->barcodeIsActive($request->barcode)) {
+                DB::rollBack();
+
+                return back()->withErrors(['barcode' => 'This item is not available (not active in inventory).']);
+            }
+
+            $barcodes[] = $request->barcode;
+            $req->item_barcodes = array_values($barcodes);
+            $req->save();
+
+            $item->setBarcodeStatus($request->barcode, 'inactive');
+            $item->save();
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
 
         RequestAudit::create([
             'request_id' => $req->id,
@@ -512,7 +591,7 @@ public function create_single_item(Request $request){
             ],
         ]);
 
-        return back()->with('success', 'Item verified and added to this request. It will be set to inactive when the request is marked issued.');
+        return back()->with('success', 'Item added to this request and reserved (inactive) until issued, removed, or cancelled.');
     }
 
     public function updateRequest($id, Request $request){
@@ -534,14 +613,28 @@ public function create_single_item(Request $request){
                     return back()->withErrors(['status' => 'Scan and verify at least one available item before approving.']);
                 }
 
-                foreach ($barcodes as $b) {
-                    $inv = Item::whereBarcodeContains($b)->first();
-                    if (! $inv || ! $inv->barcodeIsActive($b)) {
-                        return back()->withErrors(['status' => 'One or more verified items are no longer active/available.']);
-                    }
-                }
+                DB::beginTransaction();
+                try {
+                    foreach ($barcodes as $b) {
+                        $inv = Item::lockForUpdate()->whereBarcodeContains($b)->first();
+                        if (! $inv || $inv->indexOfBarcode($b) === null) {
+                            DB::rollBack();
 
-                // Barcodes stay active until the request is marked issued (same idea as single flow timing).
+                            return back()->withErrors(['status' => 'One or more verified items are no longer in inventory.']);
+                        }
+                        if ($inv->barcodeIsActive($b)) {
+                            DB::rollBack();
+
+                            return back()->withErrors([
+                                'status' => 'Each verified item must still be reserved (inactive) from allocation. Remove it from the list and add it again, or reject the request.',
+                            ]);
+                        }
+                    }
+                    DB::commit();
+                } catch (\Throwable $e) {
+                    DB::rollBack();
+                    throw $e;
+                }
             } elseif ($req->request_type === 'single') {
                 $alloc = $req->admin_break_allocations ?? [];
                 if (! is_array($alloc) || count($alloc) === 0) {
@@ -552,10 +645,17 @@ public function create_single_item(Request $request){
                 try {
                     foreach ($alloc as $line) {
                         $item = Item::lockForUpdate()->findOrFail($line['item_id']);
-                        if ($item->break !== 'break' || $item->computeAggregateStatus() !== 'active') {
+                        if ($item->break !== 'break') {
                             DB::rollBack();
 
                             return back()->withErrors(['status' => 'The allocated break item is no longer available.']);
+                        }
+                        if ($item->computeAggregateStatus() === 'active') {
+                            DB::rollBack();
+
+                            return back()->withErrors([
+                                'status' => 'Each allocated break row must still be reserved (inactive) from allocation. Remove the line and add it again, or reject the request.',
+                            ]);
                         }
                         $qty = (int) ($line['quantity'] ?? 0);
                         if ($qty < 1 || $qty > $item->quantity_pack) {
@@ -564,6 +664,9 @@ public function create_single_item(Request $request){
                             return back()->withErrors(['status' => 'Not enough break stock to approve this request.']);
                         }
                         $item->quantity_pack -= $qty;
+                        if ((int) $item->quantity_pack > 0) {
+                            $this->activateAllSlotsOnItem($item);
+                        }
                         $item->save();
                     }
                     DB::commit();
@@ -576,6 +679,13 @@ public function create_single_item(Request $request){
             $req->approved_at = now();
             $req->rejected_at = null;
         } else {
+            if ($req->request_type === 'multiple') {
+                $this->activateBarcodeSlots($req->item_barcodes ?? []);
+            } elseif ($req->request_type === 'single') {
+                foreach (($req->admin_break_allocations ?? []) as $line) {
+                    $this->activateAllSlotsOnItem(Item::find((int) ($line['item_id'] ?? 0)));
+                }
+            }
             $req->rejected_at = now();
             $req->approved_at = null;
         }
@@ -632,17 +742,10 @@ public function create_single_item(Request $request){
                 }
                 foreach ($barcodes as $b) {
                     $inv = Item::lockForUpdate()->whereBarcodeContains($b)->first();
-                    if (! $inv || ! $inv->barcodeIsActive($b)) {
+                    if (! $inv || $inv->indexOfBarcode($b) === null) {
                         DB::rollBack();
 
-                        return back()->withErrors(['status' => 'One or more items are no longer active; cannot mark issued.']);
-                    }
-                }
-                foreach ($barcodes as $b) {
-                    $inv = Item::whereBarcodeContains($b)->first();
-                    if ($inv) {
-                        $inv->setBarcodeStatus($b, 'inactive');
-                        $inv->save();
+                        return back()->withErrors(['status' => 'One or more verified items are no longer in inventory; cannot mark issued.']);
                     }
                 }
             } elseif ($req->request_type === 'single') {
@@ -719,6 +822,13 @@ public function create_single_item(Request $request){
                 $item = Item::find($itemId);
                 if ($item) {
                     $item->quantity_pack += (int) ($line['quantity'] ?? 0);
+                    $codes = array_values(array_filter(
+                        $item->barcode ?? [],
+                        fn ($c) => $c !== null && trim((string) $c) !== ''
+                    ));
+                    foreach ($codes as $code) {
+                        $item->setBarcodeStatus((string) $code, 'active');
+                    }
                     $item->save();
                 }
             }
@@ -782,6 +892,14 @@ public function create_single_item(Request $request){
 
         if ($req->status !== 'pending') {
             return back()->withErrors(['status' => 'Only pending requests can be cancelled.']);
+        }
+
+        if ($req->request_type === 'multiple') {
+            $this->activateBarcodeSlots($req->item_barcodes ?? []);
+        } elseif ($req->request_type === 'single') {
+            foreach (($req->admin_break_allocations ?? []) as $line) {
+                $this->activateAllSlotsOnItem(Item::find((int) ($line['item_id'] ?? 0)));
+            }
         }
 
         $fromStatus = $req->status;
@@ -900,6 +1018,12 @@ public function create_single_item(Request $request){
 
         $req->item_barcodes = $updatedBarcodes;
         $req->save();
+
+        $inv = Item::whereBarcodeContains($request->barcode)->first();
+        if ($inv) {
+            $inv->setBarcodeStatus($request->barcode, 'active');
+            $inv->save();
+        }
 
         RequestAudit::create([
             'request_id' => $req->id,
