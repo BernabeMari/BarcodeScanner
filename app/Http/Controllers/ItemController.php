@@ -159,7 +159,6 @@ public function create_single_item(Request $request){
     $items = $request->validate([
         'barcode' => 'required|array',
         'product_name' => 'required',
-        'quantity_piece' => 'required|integer|min:0',
         'status' => 'required',
         'break' => 'required',
         'item_type' => 'required',
@@ -181,7 +180,7 @@ public function create_single_item(Request $request){
 
     Item::assertUniqueBarcodes($barcodes);
 
-    $pieces = max(0, (int) $items['quantity_piece']);
+    $pieces = 1;
 
     DB::transaction(function () use ($items, $barcodes, $pieces) {
         foreach ($barcodes as $b) {
