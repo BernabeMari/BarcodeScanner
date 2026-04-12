@@ -31,22 +31,15 @@ export default function InactiveItemsPage({ items }) {
     })
 
     return (
-        <div
-            className="min-h-screen bg-cover bg-center"
-            style={{
-                backgroundImage:
-                    "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')",
-            }}
-        >
             <Layout>
                 <SidebarLayout>
-                    <p className="text-white text-2xl font-bold mb-4">Inactive items (by barcode)</p>
-                    <p className="text-gray-200 text-sm mb-4 max-w-2xl">
+                    <p className="text-slate-900 text-2xl font-bold mb-4">Inactive items (by barcode)</p>
+                    <p className="text-slate-600 text-sm mb-4 max-w-2xl">
                         Each row is one inactive barcode slot. Products with several barcodes can be partly active
                         and partly inactive.
                     </p>
                     {rows.length === 0 ? (
-                        <p className="text-gray-300">No inactive barcode slots.</p>
+                        <p className="text-slate-600">No inactive barcode slots.</p>
                     ) : (
                         rows.map((row) => (
                             <div
@@ -68,6 +61,5 @@ export default function InactiveItemsPage({ items }) {
                     )}
                 </SidebarLayout>
             </Layout>
-        </div>
     )
 }

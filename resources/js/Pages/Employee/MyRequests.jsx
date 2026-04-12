@@ -15,12 +15,10 @@ export default function MyRequests({ requests }) {
     const { errors, flash } = usePage().props
 
     return (
-        <div className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}>
             <Layout>
             <EmployeeLayout>
-                <h1 className="text-2xl font-semibold mb-2">My requests</h1>
-                <p className="text-gray-600 mb-6">
+                <h1 className="text-2xl font-semibold text-slate-900 mb-2">My requests</h1>
+                <p className="text-slate-600 mb-6">
                     Track your item requests and their status.
                 </p>
                 {flash?.success && (
@@ -51,10 +49,15 @@ export default function MyRequests({ requests }) {
                                 </p>
                                 {req.request_type === "single" && req.admin_break_allocations?.length > 0 && (
                                     <div className="mt-2 text-sm text-blue-900 bg-blue-50 rounded p-2">
-                                        <span className="font-medium">Break item to issue (set by admin):</span>{" "}
-                                        {req.admin_break_allocations[0].product_name} —{" "}
-                                        {req.admin_break_allocations[0].quantity} piece(s) — barcode{" "}
-                                        <code className="text-xs">{req.admin_break_allocations[0].barcode}</code>
+                                        <span className="font-medium">Break item(s) to issue (set by admin):</span>
+                                        <ul className="list-disc pl-5 mt-1">
+                                            {req.admin_break_allocations.map((line, i) => (
+                                                <li key={`${line.item_id}-${i}`}>
+                                                    {line.product_name} — {line.quantity} piece(s) — barcode{" "}
+                                                    <code className="text-xs">{line.barcode}</code>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 )}
                                 <p className="mt-2 text-sm">
@@ -73,8 +76,8 @@ export default function MyRequests({ requests }) {
                                             </span>
                                         </p>
                                         <ul className="list-disc pl-5 mt-1">
-                                            {req.verified_items.map((item) => (
-                                                <li key={`${item.barcode}-${item.product_name}`}>
+                                            {req.verified_items.map((item, vi) => (
+                                                <li key={`${vi}-${item.barcode}-${item.product_name}`}>
                                                     {item.product_name}{" "}
                                                     {item.issued_quantity != null
                                                         ? `— ${item.issued_quantity} piece(s)`
@@ -147,6 +150,5 @@ export default function MyRequests({ requests }) {
                 )}
             </EmployeeLayout>
             </Layout>
-        </div>
     )
 }

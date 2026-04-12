@@ -1,3 +1,4 @@
+import UserAvatar from "@/Components/UserAvatar"
 import Layout from "@/Layouts/Layout"
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import { formatBarcodes } from "@/utils/formatBarcodes"
@@ -10,6 +11,7 @@ export default function Requests({ requests, breakItems = [] }) {
     const [messages, setMessages] = useState({})
     const [allocItemId, setAllocItemId] = useState({})
     const [allocQty, setAllocQty] = useState({})
+    const [breakItemFilter, setBreakItemFilter] = useState({})
 
     function setBarcodeFor(id, value) {
         setBarcodes((prev) => ({ ...prev, [id]: value }))
@@ -27,20 +29,41 @@ export default function Requests({ requests, breakItems = [] }) {
         setAllocQty((prev) => ({ ...prev, [id]: value }))
     }
 
+    function setBreakItemFilterFor(id, value) {
+        setBreakItemFilter((prev) => ({ ...prev, [id]: value }))
+    }
+
+    function filteredBreakItems(req) {
+        const reqId = req.id
+        const term = (breakItemFilter[reqId] ?? "").trim().toLowerCase()
+        const allocatedIds = new Set(
+            (req.admin_break_allocations ?? [])
+                .map((line) => String(line.item_id ?? ""))
+                .filter((id) => id !== "" && id !== "0"),
+        )
+        let items = breakItems.filter((item) => !allocatedIds.has(String(item.id)))
+        if (term) {
+            items = items.filter((item) => {
+                const name = (item.product_name ?? "").toLowerCase()
+                const codes = Array.isArray(item.barcode) ? item.barcode.join(" ").toLowerCase() : ""
+                return name.includes(term) || codes.includes(term)
+            })
+        }
+        return items
+    }
+
     function currentAllocItemId(req) {
         if (Object.prototype.hasOwnProperty.call(allocItemId, req.id)) {
             return allocItemId[req.id]
         }
-        const saved = req.admin_break_allocations?.[0]?.item_id
-        return saved != null ? String(saved) : ""
+        return ""
     }
 
     function currentAllocQty(req) {
         if (Object.prototype.hasOwnProperty.call(allocQty, req.id)) {
             return allocQty[req.id]
         }
-        const q = req.admin_break_allocations?.[0]?.quantity
-        return q != null ? String(q) : ""
+        return ""
     }
 
     function verifyItem(requestId) {
@@ -73,22 +96,32 @@ export default function Requests({ requests, breakItems = [] }) {
         router.post(
             route("save_break_allocation", req.id),
             { item_id, quantity },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setAllocItemFor(req.id, "")
+                    setAllocQtyFor(req.id, "")
+                },
+            },
+        )
+    }
+
+    function removeBreakAllocationLine(reqId, index) {
+        router.post(
+            route("remove_break_allocation_line", reqId),
+            { index },
             { preserveScroll: true },
         )
     }
 
     return (
-        <div
-            className="min-h-screen bg-cover bg-center"
-            style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}
-        >
             <Layout>
                 <SidebarLayout>
-                    <h1 className="text-2xl font-semibold text-white mb-4">Employee requests</h1>
-                    <p className="text-gray-200 mb-2">
+                    <h1 className="text-2xl font-semibold text-slate-900 mb-4">Employee requests</h1>
+                    <p className="text-slate-600 mb-2">
                         <strong>Multiple:</strong> scan regular inventory (break items cannot be scanned).
                         <br />
-                        <strong>Single:</strong> save a <strong>break item</strong> and piece count, then approve — pieces are deducted on approve. If issuance is cancelled, pieces are returned. <strong>Mark as issued</strong> only updates the request status.
+                        <strong>Single:</strong> add one or more break lines (product + pieces), then approve — stock is deducted on approve. <strong>Mark as issued</strong> also marks break barcodes inactive when that line is fully depleted (so they no longer appear as available on Available Items).
                     </p>
                     {flash?.success && <p className="mb-4 text-green-700 text-sm">{flash.success}</p>}
                     {errors?.barcode && <p className="mb-4 text-red-600 text-sm">{errors.barcode}</p>}
@@ -105,31 +138,53 @@ export default function Requests({ requests, breakItems = [] }) {
                         <ul className="space-y-4">
                             {requests.map((req) => (
                                 <li key={req.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                                    <p className="font-medium text-gray-900">{req.user?.username ?? "Unknown user"}</p>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                        <span className="font-medium">Department:</span>{" "}
-                                        {req.user?.department?.trim() ? req.user.department : "—"}
-                                    </p>
+                                    <div className="flex gap-4 border-b border-slate-100 pb-4 mb-4">
+                                        <UserAvatar user={req.user} className="h-14 w-14 shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-medium text-gray-900">
+                                                {req.user?.username ?? "Unknown user"}
+                                            </p>
+                                            <p className="text-sm text-gray-600 mt-0.5">
+                                                <span className="font-medium">Department:</span>{" "}
+                                                {req.user?.department?.trim() ? req.user.department : "—"}
+                                            </p>
+                                        </div>
+                                    </div>
                                     <p className="text-gray-800 mt-1">
                                         <span className="font-medium">Request type:</span> ({req.request_type})
                                     </p>
                                     <p className="text-gray-800 mt-2">
                                         <span className="font-medium">Employee request:</span>
-                                        <ul className="ml-4 list-disc">
-                                            {req.message.map((msg, index) => (
-                                                <li key={index}>
-                                                    {msg} – {req.request_quantity[index]}
-                                                </li>
-                                            ))}
+                                        <ul className="ml-4 list-disc mt-1">
+                                            {Array.isArray(req.message) &&
+                                                req.message.map((msg, index) => (
+                                                    <li key={index}>
+                                                        {msg} – {req.request_quantity?.[index]}
+                                                    </li>
+                                                ))}
                                         </ul>
                                     </p>
 
                                     {req.request_type === "single" && req.admin_break_allocations?.length > 0 && (
-                                        <div className="mt-2 text-sm text-green-800 bg-green-50 rounded p-2">
-                                            <span className="font-medium">Saved break allocation:</span>{" "}
-                                            {req.admin_break_allocations[0].product_name} —{" "}
-                                            {req.admin_break_allocations[0].quantity} piece(s) — barcode{" "}
-                                            <code className="text-xs">{req.admin_break_allocations[0].barcode}</code>
+                                        <div className="mt-2 text-sm text-green-800 bg-green-50 rounded p-2 space-y-1">
+                                            <span className="font-medium">Saved break allocation(s):</span>
+                                            <ul className="list-disc pl-5 mt-1">
+                                                {req.admin_break_allocations.map((line, lineIdx) => (
+                                                    <li key={`${line.item_id}-${lineIdx}`}>
+                                                        {line.product_name} — {line.quantity} piece(s) — barcode{" "}
+                                                        <code className="text-xs">{line.barcode}</code>
+                                                        {req.status === "pending" && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeBreakAllocationLine(req.id, lineIdx)}
+                                                                className="ml-2 text-xs text-red-600 hover:text-red-800 underline"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     )}
 
@@ -247,6 +302,16 @@ export default function Requests({ requests, breakItems = [] }) {
                                                 <div className="flex flex-wrap gap-3 items-end">
                                                     <div className="flex flex-col min-w-[220px]">
                                                         <label className="text-xs font-medium text-gray-600 mb-1">
+                                                            Filter break items
+                                                        </label>
+                                                        <input
+                                                            type="search"
+                                                            className="border rounded px-3 py-2 text-sm mb-2"
+                                                            placeholder="Name or barcode…"
+                                                            value={breakItemFilter[req.id] ?? ""}
+                                                            onChange={(e) => setBreakItemFilterFor(req.id, e.target.value)}
+                                                        />
+                                                        <label className="text-xs font-medium text-gray-600 mb-1">
                                                             Break item
                                                         </label>
                                                         <select
@@ -255,7 +320,7 @@ export default function Requests({ requests, breakItems = [] }) {
                                                             onChange={(e) => setAllocItemFor(req.id, e.target.value)}
                                                         >
                                                             <option value="">Select…</option>
-                                                            {breakItems.map((item) => (
+                                                            {filteredBreakItems(req).map((item) => (
                                                                 <option key={item.id} value={String(item.id)}>
                                                                     {item.product_name} ({formatBarcodes(item.barcode)}) —{" "}
                                                                     {item.quantity_pack} pcs
@@ -281,7 +346,7 @@ export default function Requests({ requests, breakItems = [] }) {
                                                         onClick={() => saveBreakAllocationFor(req)}
                                                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm"
                                                     >
-                                                        Save allocation
+                                                        Add allocation line
                                                     </button>
                                                 </div>
                                             )}
@@ -327,6 +392,5 @@ export default function Requests({ requests, breakItems = [] }) {
                     )}
                 </SidebarLayout>
             </Layout>
-        </div>
     )
 }

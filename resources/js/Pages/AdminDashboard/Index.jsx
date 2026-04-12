@@ -1,14 +1,17 @@
-import SidebarLayout from "@/Layouts/sidebarLayout"
 import Layout from "@/Layouts/Layout"
-export default function(){
-    return(
-        <div className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')"  }}>
-            <Layout>
-                <SidebarLayout>
-            <div className="min-h-screen">asda2s</div>
-                </SidebarLayout>
-            </Layout>
-        </div>
+import SidebarLayout from "@/Layouts/sidebarLayout"
+
+export default function AdminHome() {
+    return (
+        <Layout>
+            <SidebarLayout>
+                <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+                    <h1 className="text-2xl font-semibold text-slate-900">Admin dashboard</h1>
+                    <p className="mt-2 text-slate-600">
+                        Use the navigation on the left to manage inventory, requests, and users.
+                    </p>
+                </div>
+            </SidebarLayout>
+        </Layout>
     )
 }

@@ -17,7 +17,6 @@ Route::middleware(['auth', 'role:superadmin,admin'])->controller(ItemController:
     Route::get('/Items', 'itemPage')->name('items_page');
     Route::get('/BreakItems', 'breakItemsPage')->name('break_items_page');
     Route::get('/scan', 'scanPage')->name('scanner_page');
-    Route::get('/search/{barcode?}', 'searchPage')->name('search_page');
     Route::post('/scan-product', 'scan');
     Route::get('/CreateUser', 'CreateUserPage')->name('create_user_page');
     Route::post('/create-product', 'create_item')->name('create_item');
@@ -32,6 +31,7 @@ Route::middleware(['auth', 'role:superadmin,admin'])->controller(ItemController:
     Route::post('/requests/{id}/cancel-issuance', 'cancelRequestIssuance')->name('cancel_request_issuance');
     Route::post('/requests/{id}/remove-verified-item', 'removeVerifiedItem')->name('remove_verified_item');
     Route::post('/requests/{id}/break-allocation', 'saveBreakAllocation')->name('save_break_allocation');
+    Route::post('/requests/{id}/break-allocation/remove', 'removeBreakAllocationLine')->name('remove_break_allocation_line');
     Route::put('/items/{id}/update', 'updateBreakItem')->name('update_break_item');
     Route::post('/items/{id}/unbreak', 'unbreakBreakItem')->name('unbreak_break_item');
     Route::post('/items/{id}/break-barcode', 'splitBarcodeBreak')->name('split_barcode_break');

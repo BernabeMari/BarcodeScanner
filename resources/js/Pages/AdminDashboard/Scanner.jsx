@@ -54,18 +54,18 @@ export default function Index() {
     setItemData("barcode", next)
   }
   return (
-    <div className="min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}>
-
       <Layout>
         <SidebarLayout>
 
-          <div>
-            <button type="button" onClick={(e) => {showSingleModalset(true); showMultipleModalset(false)}}>Single</button>
-            <button type="button" onClick={(e) => {showMultipleModalset(true); showSingleModalset(false)}}>Multiple</button>
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm max-w-3xl mx-auto">
+            <h1 className="text-xl font-semibold text-slate-900 mb-4">Create inventory item</h1>
+            <div className="flex gap-2 mb-6">
+            <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" onClick={() => {showSingleModalset(true); showMultipleModalset(false)}}>Single</button>
+            <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" onClick={() => {showMultipleModalset(true); showSingleModalset(false)}}>Multiple</button>
+            </div>
             <div className="flex justify-center items-center">
                 {showSingleModal && (
-                  <form onSubmit={submit_single_item} className="flex flex-col m-5 text-white max-w-lg w-full">
+                  <form onSubmit={submit_single_item} className="flex flex-col m-5 text-slate-800 max-w-lg w-full">
                     <p className="font-medium">Barcodes (quantity / piece = number of barcodes)</p>
                     {itemData.barcode.map((row, index) => (
                     <div key={index} className="flex flex-row gap-2 my-1">
@@ -117,7 +117,7 @@ export default function Index() {
                 )}
                 
                 {showMultipleModal && (
-                  <form onSubmit={submit_item} className="flex flex-col m-5 text-white max-w-lg w-full">
+                  <form onSubmit={submit_item} className="flex flex-col m-5 text-slate-800 max-w-lg w-full">
                 <p className="font-medium">Barcodes (quantity / pack = number of barcodes)</p>
                 {itemData.barcode.map((row, index) => (
                   <div key={index} className="flex flex-row gap-2 my-1">
@@ -172,6 +172,5 @@ export default function Index() {
           </div>
         </SidebarLayout>
       </Layout>
-    </div>
   );
 }

@@ -18,23 +18,16 @@ export default function BreakItemsPage({ items }) {
     }
 
     return (
-        <div
-            className="min-h-screen bg-cover bg-center flex flex-col"
-            style={{
-                backgroundImage:
-                    "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')",
-            }}
-        >
             <Layout>
                 <SidebarLayout>
-                    <p className="text-white text-2xl font-bold mb-4">Break Items</p>
+                    <p className="text-slate-900 text-2xl font-bold mb-4">Break items</p>
                     {errors?.unbreak && (
-                        <p className="text-red-200 text-sm mb-4 max-w-2xl">
+                        <p className="text-red-600 text-sm mb-4 max-w-2xl">
                             {Array.isArray(errors.unbreak) ? errors.unbreak[0] : errors.unbreak}
                         </p>
                     )}
                     {items.length === 0 ? (
-                        <p className="text-gray-300">No break items yet.</p>
+                        <p className="text-slate-600">No break items yet.</p>
                     ) : (
                         items.filter((item) => item.quantity_pack > 0).map((item) => (
                             <div
@@ -76,6 +69,5 @@ export default function BreakItemsPage({ items }) {
                     )}
                 </SidebarLayout>
             </Layout>
-        </div>
     )
 }

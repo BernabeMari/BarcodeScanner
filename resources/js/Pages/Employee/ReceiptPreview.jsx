@@ -1,4 +1,5 @@
 import EmployeeLayout from "@/Layouts/EmployeeLayout"
+import Layout from "@/Layouts/Layout"
 import { router } from "@inertiajs/react"
 
 export default function ReceiptPreview({ request, items, user }) {
@@ -11,7 +12,7 @@ export default function ReceiptPreview({ request, items, user }) {
     }
 
     return (
-        <div>
+        <Layout>
             <EmployeeLayout>
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -122,6 +123,6 @@ export default function ReceiptPreview({ request, items, user }) {
                     </div>
                 </div>
             </EmployeeLayout>
-        </div>
+        </Layout>
     )
 }

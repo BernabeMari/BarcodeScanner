@@ -1,3 +1,4 @@
+import UserAvatar from "@/Components/UserAvatar"
 import Layout from "@/Layouts/Layout"
 import SidebarLayout from "@/Layouts/sidebarLayout"
 import { formatBarcodes } from "@/utils/formatBarcodes"
@@ -41,13 +42,10 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
     }
 
     return (
-        <div className="min-h-screen bg-cover bg-center"
-            style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/TCU.jpg')" }}
-        >
             <Layout>
                 <SidebarLayout>
                     <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-                        <h1 className="text-2xl font-semibold text-white">Done requests</h1>
+                        <h1 className="text-2xl font-semibold text-slate-900">Done requests</h1>
                         <div className="flex gap-2 flex-wrap">
                             <button
                                 type="button"
@@ -155,20 +153,26 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
                                     key={req.id}
                                     className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <p className="font-medium text-gray-900">
-                                            {req.user?.username ?? "Unknown user"}
-                                        </p>
-                                        <p className="text-sm text-gray-500">
-                                            Request ID: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{req.id}</code>
+                                    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                                        <div className="flex min-w-0 flex-1 gap-3">
+                                            <UserAvatar user={req.user} className="h-12 w-12 shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-gray-900">
+                                                    {req.user?.username ?? "Unknown user"}
+                                                </p>
+                                                <p className="text-sm text-gray-600 mt-0.5">
+                                                    <span className="font-medium">Department:</span>{" "}
+                                                    {req.user?.department?.trim()
+                                                        ? req.user.department
+                                                        : "—"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-gray-500 shrink-0">
+                                            Request ID:{" "}
+                                            <code className="bg-gray-100 px-2 py-1 rounded text-xs">{req.id}</code>
                                         </p>
                                     </div>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                        <span className="font-medium">Department:</span>{" "}
-                                        {req.user?.department?.trim()
-                                            ? req.user.department
-                                            : "—"}
-                                    </p>
                                     <div className="mt-3 text-gray-800">
                                         <span className="font-medium">Request type:</span> {req.request_type}
                                     </div>
@@ -185,10 +189,15 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
                                     </div>
                                     {req.request_type === "single" && req.admin_break_allocations?.length > 0 && (
                                         <div className="mt-2 text-sm text-green-800 bg-green-50 rounded p-2">
-                                            <span className="font-medium">Break allocation:</span>{" "}
-                                            {req.admin_break_allocations[0].product_name} —{" "}
-                                            {req.admin_break_allocations[0].quantity} piece(s) —{" "}
-                                            <code className="text-xs">{req.admin_break_allocations[0].barcode}</code>
+                                            <span className="font-medium">Break allocation(s):</span>
+                                            <ul className="list-disc pl-5 mt-1">
+                                                {req.admin_break_allocations.map((line, i) => (
+                                                    <li key={`${line.item_id}-${i}`}>
+                                                        {line.product_name} — {line.quantity} piece(s) —{" "}
+                                                        <code className="text-xs">{line.barcode}</code>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     )}
 
@@ -297,7 +306,6 @@ export default function DoneRequests({ requests, filter, search, breakItems = []
                     )}
                 </SidebarLayout>
             </Layout>
-        </div>
     )
 }
 

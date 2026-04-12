@@ -30,9 +30,80 @@ class ItemController extends Controller
         return inertia('AdminDashboard/Index');
     }
 
-    public function itemPage(){
-        $items = Item::all();
-        return inertia('AdminDashboard/Items', ['items' => $items]);
+    public function itemPage(Request $httpRequest)
+    {
+        $q = trim((string) $httpRequest->query('q', ''));
+        $barcodeRaw = $httpRequest->query('barcode', null);
+
+        $searchMeta = [
+            'q' => $q,
+            'barcode' => null,
+            'error' => null,
+            'searchByQuery' => false,
+        ];
+
+        if ($q !== '') {
+            $escaped = addcslashes($q, '%_\\');
+            $like = '%'.$escaped.'%';
+
+            $items = Item::query()
+                ->where(function ($query) use ($like, $q) {
+                    $query->where('product_name', 'like', $like)
+                        ->orWhereJsonContains('barcode', $q);
+                })
+                ->orderBy('product_name')
+                ->limit(75)
+                ->get();
+
+            $searchMeta['searchByQuery'] = true;
+
+            if ($items->isEmpty()) {
+                $searchMeta['error'] = 'No items match your search.';
+            }
+
+            return inertia('AdminDashboard/Items', [
+                'items' => $items,
+                'searchMeta' => $searchMeta,
+            ]);
+        }
+
+        if ($barcodeRaw !== null && trim((string) $barcodeRaw) !== '') {
+            $barcodes = array_values(array_filter(
+                array_map('trim', explode(',', (string) $barcodeRaw)),
+                fn ($b) => $b !== ''
+            ));
+
+            $items = Item::query()
+                ->where(function ($query) use ($barcodes) {
+                    foreach ($barcodes as $b) {
+                        $query->orWhereJsonContains('barcode', $b);
+                    }
+                })
+                ->get()
+                ->unique('id')
+                ->values();
+
+            $searchMeta['barcode'] = implode(', ', $barcodes);
+
+            if ($items->isEmpty()) {
+                $searchMeta['error'] = 'Product not found for this barcode.';
+
+                return inertia('AdminDashboard/Items', [
+                    'items' => Item::all(),
+                    'searchMeta' => $searchMeta,
+                ]);
+            }
+
+            return inertia('AdminDashboard/Items', [
+                'items' => $items,
+                'searchMeta' => $searchMeta,
+            ]);
+        }
+
+        return inertia('AdminDashboard/Items', [
+            'items' => Item::all(),
+            'searchMeta' => $searchMeta,
+        ]);
     }
 
     public function breakItemsPage(){
@@ -51,40 +122,6 @@ class ItemController extends Controller
         return back()->with('success', $item);
     }
 
-    public function searchPage($barcodes = null)
-    {
-        if (! $barcodes) {
-            return inertia('AdminDashboard/Search');
-        }
-
-        if (is_string($barcodes)) {
-            $barcodes = explode(',', $barcodes);
-        }
-
-        $barcodes = array_values(array_filter(array_map('trim', $barcodes), fn ($b) => $b !== ''));
-
-        if (count($barcodes) === 0) {
-            return inertia('AdminDashboard/Search');
-        }
-
-        $items = Item::query()
-            ->where(function ($q) use ($barcodes) {
-                foreach ($barcodes as $b) {
-                    $q->orWhereJsonContains('barcode', $b);
-                }
-            })
-            ->get()
-            ->unique('id')
-            ->values();
-
-        if ($items->isEmpty()) {
-            return inertia('AdminDashboard/Search', [
-                'error' => 'Product not found',
-            ]);
-        }
-        
-        return inertia('AdminDashboard/Search', ['items' => $items]);
-    }
     public function create_item(Request $request){
     $items = $request->validate([
         'barcode' => 'required|array',
@@ -267,10 +304,16 @@ public function create_single_item(Request $request){
 
     public function submitRequest(Request $request){
         $request->validate([
-            'message' => 'required|array',
+            'message' => 'required|array|min:1',
             'request_type' => 'required|in:single,multiple',
-            'request_quantity' => 'required|array',
+            'request_quantity' => 'required|array|min:1',
         ]);
+
+        if (count($request->message) !== count($request->request_quantity)) {
+            return back()->withErrors([
+                'message' => 'Each request line needs a matching quantity.',
+            ]);
+        }
 
         $req = ItemRequest::create([
             'user_id' => $request->user()->id,
@@ -325,8 +368,8 @@ public function create_single_item(Request $request){
             return back()->withErrors(['allocation' => 'Only single requests use break allocations.']);
         }
 
-        if (! in_array($req->status, ['pending', 'approved'], true)) {
-            return back()->withErrors(['allocation' => 'Allocation can only be saved while the request is pending or approved.']);
+        if ($req->status !== 'pending') {
+            return back()->withErrors(['allocation' => 'Allocation lines can only be added while the request is pending.']);
         }
 
         $item = Item::findOrFail($request->integer('item_id'));
@@ -339,18 +382,65 @@ public function create_single_item(Request $request){
             return back()->withErrors(['allocation' => 'Not enough pieces available for this break item.']);
         }
 
+        $lines = $req->admin_break_allocations ?? [];
+        if (! is_array($lines)) {
+            $lines = [];
+        }
+
+        foreach ($lines as $line) {
+            if ((int) ($line['item_id'] ?? 0) === (int) $item->id) {
+                return back()->withErrors([
+                    'allocation' => 'This item has already been added to this request.',
+                ]);
+            }
+        }
+
         $codes = $item->barcode ?? [];
         $barcodeLabel = is_array($codes) && count($codes) > 0 ? (string) $codes[0] : '';
 
-        $req->admin_break_allocations = [[
+        $lines[] = [
             'item_id' => $item->id,
             'quantity' => $qty,
             'product_name' => $item->product_name,
             'barcode' => $barcodeLabel,
-        ]];
+        ];
+        $req->admin_break_allocations = $lines;
         $req->save();
 
-        return back()->with('success', 'Break item allocation saved.');
+        return back()->with('success', 'Break item allocation line added.');
+    }
+
+    public function removeBreakAllocationLine($id, Request $request)
+    {
+        $request->validate([
+            'index' => 'required|integer|min:0',
+        ]);
+
+        $req = ItemRequest::findOrFail($id);
+
+        if ($req->request_type !== 'single') {
+            return back()->withErrors(['allocation' => 'Only single requests use break allocations.']);
+        }
+
+        if ($req->status !== 'pending') {
+            return back()->withErrors(['allocation' => 'Allocations can only be removed while the request is pending.']);
+        }
+
+        $lines = $req->admin_break_allocations ?? [];
+        if (! is_array($lines)) {
+            return back()->withErrors(['allocation' => 'No allocations to remove.']);
+        }
+
+        $index = $request->integer('index');
+        if ($index >= count($lines)) {
+            return back()->withErrors(['allocation' => 'Invalid allocation line.']);
+        }
+
+        array_splice($lines, $index, 1);
+        $req->admin_break_allocations = array_values($lines);
+        $req->save();
+
+        return back()->with('success', 'Allocation line removed.');
     }
 
     public function verifyRequestItem($id, Request $request){
@@ -538,6 +628,27 @@ public function create_single_item(Request $request){
                     if ($inv) {
                         $inv->setBarcodeStatus($b, 'inactive');
                         $inv->save();
+                    }
+                }
+            } elseif ($req->request_type === 'single') {
+                $alloc = $req->admin_break_allocations ?? [];
+                if (is_array($alloc)) {
+                    foreach ($alloc as $line) {
+                        $item = Item::lockForUpdate()->find($line['item_id'] ?? null);
+                        if (! $item || $item->break !== 'break') {
+                            continue;
+                        }
+                        if ((int) $item->quantity_pack !== 0) {
+                            continue;
+                        }
+                        $codes = array_values(array_filter(
+                            $item->barcode ?? [],
+                            fn ($c) => $c !== null && trim((string) $c) !== ''
+                        ));
+                        foreach ($codes as $code) {
+                            $item->setBarcodeStatus($code, 'inactive');
+                        }
+                        $item->save();
                     }
                 }
             }
